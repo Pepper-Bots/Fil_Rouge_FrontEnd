@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion</title>
+  </head>
+  <body>
+    <main>
+      <h1>Connexion</h1>
+      <form
+        (ngSubmit)="onSubmit(connexionForm)"
+        #connexionForm="ngForm"
+        novalidate
+      >
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            ngModel
+            required
+            email
+            aria-describedby="emailError"
+            class="form-control"
+          />
+          <div
+            id="emailError"
+            *ngIf="
+              connexionForm.form.controls['email']?.invalid &&
+              connexionForm.form.controls['email']?.touched
+            "
+            class="error-message"
+          >
+            <small
+              *ngIf="connexionForm.form.controls['email']?.errors?.['required']"
+            >
+              L'email est requis.
+            </small>
+            <small
+              *ngIf="connexionForm.form.controls['email']?.errors?.['email']"
+            >
+              L'email n'est pas valide.
+            </small>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password">Mot de passe:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            ngModel
+            required
+            minlength="6"
+            aria-describedby="passwordError"
+            class="form-control"
+          />
+          <div
+            id="passwordError"
+            *ngIf="
+              connexionForm.form.controls['password']?.invalid &&
+              connexionForm.form.controls['password']?.touched
+            "
+            class="error-message"
+          >
+            <small
+              *ngIf="connexionForm.form.controls['password']?.errors?.['required']"
+            >
+              Le mot de passe est requis.
+            </small>
+            <small
+              *ngIf="connexionForm.form.controls['password']?.errors?.['minlength']"
+            >
+              Le mot de passe doit contenir au moins 6 caractères.
+            </small>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="!connexionForm.form.valid"
+          class="btn btn-primary"
+        >
+          Se connecter
+        </button>
+      </form>
+
+      <!-- Error Message -->
+      <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+
+      <!-- Link to Registration -->
+      <a routerLink="/inscription" class="link">Créer un compte</a>
+    </main>
+  </body>
+</html>
