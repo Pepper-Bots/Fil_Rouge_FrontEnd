@@ -1,11 +1,15 @@
 // filepath: c:\Users\helen\OneDrive\Bureau\Metz Numeric School\MNS - CDA\Titre\ADMIN_MNS_Helene_Rizzon_local\Front\admin-mns-front\src\app\pages\connexion\connexion.component.ts
 import { Component } from '@angular/core';
-import { NgForm } from '@angular/forms';
+import {FormsModule, NgForm} from '@angular/forms';
 
 @Component({
   selector: 'app-connexion',
   templateUrl: './connexion.component.html',
-  styleUrls: ['./connexion.component.css'], // ou .scss
+  styleUrls: ['./connexion.component.css'],
+  imports: [
+    FormsModule
+  ],
+  // ou .scss
 })
 export class ConnexionComponent {
   errorMessage: string = '';
