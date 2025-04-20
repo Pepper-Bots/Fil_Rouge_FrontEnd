@@ -6,7 +6,6 @@
 
 <div class="row">
 
-
   @for (dossier of dossiers; track $index) {
 
     <div class="col-6 mb-4">
@@ -17,7 +16,12 @@
           <mat-card-subtitle>
             <span class="code">{{ dossier.codeArticle }}</span>
 
+<!--            TODO Remplacer codeArticle -> voir attributs Dossier-->
+
             @for (etat of dossier.etats; track $index) {
+
+<!--              TODO remplacer 'etats' par quoi ?-->
+
               <span class="etat" [ngStyle]="{backgroundColor: etat.couleur}">{{ etat.nom }}</span>
             }
 
@@ -30,6 +34,9 @@
           </p>
         </mat-card-content>
         <mat-card-actions>
+
+<!--          @if (auth.role == "ROLE_VENDEUR" || auth.role == "ROLE_CHEF_RAYON") {-->
+
           <button mat-button [routerLink]="['/modifier-dossier/', dossier.id]">Editer</button>
           <button mat-button>Supprimer</button>
           <button mat-button>Acheter</button>
