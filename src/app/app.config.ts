@@ -1,7 +1,8 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http'; // Ajout de HttpClient
-import { FormsModule } from '@angular/forms';
+//import { FormsModule } from '@angular/forms';
+import {provideReactiveForms } from '@angular/forms';
 
 import { routes } from './app.routes';
 
@@ -10,6 +11,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(), // Ajout ici
-    FormsModule, // Ajout de FormsModule pour les formulaires],
+    // FormsModule(), // Ajout de FormsModule pour les formulaires],
+    provideReactiveForms(), // Ajout ici pour les Reactive Forms
   ],
 };
