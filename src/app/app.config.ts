@@ -1,17 +1,16 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http'; // Ajout de HttpClient
-//import { FormsModule } from '@angular/forms';
-import {provideReactiveForms } from '@angular/forms';
 
 import { routes } from './app.routes';
+import {provideHttpClient, withInterceptors} from '@angular/common/http';
+import {jwtInterceptor} from './services/jwt.interceptor';
+import {provideAnimations} from '@angular/platform-browser/animations';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(), // Ajout ici
-    // FormsModule(), // Ajout de FormsModule pour les formulaires],
-    provideReactiveForms(), // Ajout ici pour les Reactive Forms
-  ],
+    provideHttpClient(withInterceptors([jwtInterceptor])),
+    provideAnimations(),
+  ]
 };
