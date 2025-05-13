@@ -1,23 +1,75 @@
-<div>
-  <table>
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nom</th>
-      <th>Statut</th>
-      <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr *ngFor="let dossier of pageDossiers"> // pageDossiers
-      <td>{{ dossier.id }}</td>
-      <td>{{ dossier.nom }}</td>
-      <td>{{ dossier.statut }}</td>
-      <td><button (click)="goToDetail(dossier.id)">Voir</button></td>
-    </tr>
-    </tbody>
-  </table>
-  <div>
-    <button *ngFor="let p of [].constructor(totalPages); let i = index" (click)="setPage(i + 1)" [class.active]="currentPage === i + 1">{{ i + 1 }}</button>
+<!-- dossiers-list.component.html -->
+<div class="container">
+  <div class="header-section">
+    <h2>Liste des dossiers</h2>
+    <button mat-raised-button color="primary" routerLink="/ajout-dossier">
+      <mat-icon>add</mat-icon> Nouveau dossier
+    </button>
   </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Chargement des dossiers...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+    <button mat-button color="primary" (click)="loadDossiers()">Réessayer</button>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && pageDossiers.length === 0" class="empty-state">
+    <mat-icon>folder_open</mat-icon>
+    <h3>Aucun dossier trouvé</h3>
+    <p>Commencez par créer un nouveau dossier</p>
+  </div>
+
+  <!-- Dossiers list -->
+  <div class="dossiers-grid" *ngIf="!loading && pageDossiers.length > 0">
+    <mat-card *ngFor="let dossier of pageDossiers"
+              class="dossier-card"
+              (click)="goToDetail(dossier.id)">
+      <mat-card-header>
+        <mat-card-title>{{ dossier.nomPrenomStagiaire || 'Stagiaire non défini' }}</mat-card-title>
+        <mat-card-subtitle>
+          <span class="dossier-code">{{ dossier.codeDossier }}</span>
+          <span class="dossier-status"
+                [style.background-color]="dossier.statutDossier?.couleur || '#ccc'">
+            {{ dossier.statutDossier?.nom }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p *ngIf="dossier.titreFormation">
+          <mat-icon>school</mat-icon> {{ dossier.titreFormation }}
+        </p>
+        <p>
+          <mat-icon>calendar_today</mat-icon>
+          Créé le {{ dossier.dateCreation | date:'dd/MM/yyyy' }}
+        </p>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button (click)="editDossier(dossier.id); $event.stopPropagation()">
+          <mat-icon>edit</mat-icon> Modifier
+        </button>
+        <button mat-button color="warn" (click)="deleteDossier(dossier.id, $event)">
+          <mat-icon>delete</mat-icon> Supprimer
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator *ngIf="totalItems > 0"
+                 [length]="totalItems"
+                 [pageSize]="pageSize"
+                 [pageSizeOptions]="pageSizeOptions"
+                 [pageIndex]="currentPage"
+                 (page)="handlePageEvent($event)"
+                 aria-label="Sélectionner une page">
+  </mat-paginator>
 </div>

@@ -1,51 +1,130 @@
-import {Component, OnInit} from '@angular/core';
-import {Router} from '@angular/router';
-import {AffichageDossiersComponent} from '../affichage-dossiers/affichage-dossiers.component';
-import {CommonModule} from '@angular/common';
-
-interface Dossier {
-  id: number;
-  nom: string;
-  // TODO à ajuster selon entité Dossier
-  statut: 'complet' | 'incomplet';
-}
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DossierService } from '../services/dossier.service';
+import { Dossier } from '../models/dossier.model';
 
 @Component({
   selector: 'app-dossiers-list',
-  imports: [CommonModule, AffichageDossiersComponent],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule
+  ],
   templateUrl: './dossiers-list.component.html',
-  styleUrl: './dossiers-list.component.scss',
-  standalone: true
+  styleUrls: ['./dossiers-list.component.scss']
 })
-
 export class DossiersListComponent implements OnInit {
   dossiers: Dossier[] = [];
   pageDossiers: Dossier[] = [];
   pageSize = 20;
-  currentPage = 1;
-  totalPages = 0;
+  currentPage = 0; // Angular Material est 0-indexed
+  totalItems = 0;
+  pageSizeOptions = [5, 10, 20, 50];
 
-  constructor(private router: Router) {}
+  loading = true;
+  error: string | null = null;
 
-    ngOnInit(): void {
+  constructor(
+    private dossierService: DossierService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDossiers();
+  }
+
+  loadDossiers(useMock: boolean = false): void {
+    this.loading = true;
+
+    if (useMock) {
+      // Utiliser des données fictives pour les tests
       this.dossiers = Array.from({ length: 100 }, (_, i) => ({
         id: i + 1,
-        nom: `Dossier ${i + 1}`,
-        statut: i % 2 === 0 ? 'complet' : 'incomplet'
-    }));
+        codeDossier: `CODE-${i + 1}`,
+        dateCreation: new Date().toISOString(),
+        statutDossier: {
+          id: i % 3 + 1,
+          nom: i % 3 === 0 ? 'Complet' : i % 3 === 1 ? 'En cours' : 'Incomplet',
+          couleur: i % 3 === 0 ? '#28a745' : i % 3 === 1 ? '#ffc107' : '#dc3545',
+          description: `Description du statut ${i % 3 + 1}`
+        },
+        nomPrenomStagiaire: `Stagiaire ${i + 1}`,
+        titreFormation: `Formation ${i % 5 + 1}`
+      }));
 
-    this.totalPages = Math.ceil(this.dossiers.length / this.pageSize);
-    this.setPage(1);
+      this.totalItems = this.dossiers.length;
+      this.updatePage();
+      this.loading = false;
+    } else {
+      // Utiliser le service pour récupérer les données réelles
+      this.dossierService.getDossiersPaginated(this.currentPage, this.pageSize).subscribe({
+        next: (response) => {
+          this.pageDossiers = response.content;
+          this.totalItems = response.totalElements;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des dossiers', err);
+          this.error = 'Impossible de charger les dossiers depuis le serveur';
+          this.loading = false;
+
+          // Fallback vers les données fictives en cas d'erreur
+          this.loadDossiers(true);
+        }
+      });
     }
+  }
 
-    setPage(page: number): void {
-      this.currentPage = page;
-      const start = (page - 1) * this.pageSize;
-      this.pageDossiers = this.dossiers.slice(start, start + this.pageSize);
+  updatePage(): void {
+    const start = this.currentPage * this.pageSize;
+    this.pageDossiers = this.dossiers.slice(start, start + this.pageSize);
+  }
+
+  handlePageEvent(event: PageEvent): void {
+    this.currentPage = event.pageIndex;
+    this.pageSize = event.pageSize;
+
+    // Si nous utilisons des données réelles, rechargez à partir du serveur
+    if (this.error === null) {
+      this.loadDossiers();
+    } else {
+      // Sinon, utilisez les données locales
+      this.updatePage();
+    }
   }
 
   goToDetail(id: number): void {
-    this.router.navigate(['/dossier', id]);
+    this.router.navigate(['/detail-dossier', id]);
   }
 
+  editDossier(id: number): void {
+    this.router.navigate(['/modifier-dossier', id]);
+  }
+
+  deleteDossier(id: number, event: Event): void {
+    event.stopPropagation(); // Pour éviter la navigation vers la page détail
+
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
+      this.dossierService.deleteDossier(id).subscribe({
+        next: () => {
+          // Après suppression, recharger les données
+          this.loadDossiers();
+        },
+        error: (err) => {
+          console.error('Erreur lors de la suppression du dossier', err);
+          alert('Erreur lors de la suppression du dossier');
+        }
+      });
+    }
+  }
 }

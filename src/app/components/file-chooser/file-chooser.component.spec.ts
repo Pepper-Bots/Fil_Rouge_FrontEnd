@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DossierFormComponent } from './dossier-form.component';
+import { FileChooserComponent } from './file-chooser.component';
 
-describe('DossierFormComponent', () => {
-  let component: DossierFormComponent;
-  let fixture: ComponentFixture<DossierFormComponent>;
+describe('FileChooserComponent', () => {
+  let component: FileChooserComponent;
+  let fixture: ComponentFixture<FileChooserComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DossierFormComponent]
+      imports: [FileChooserComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(DossierFormComponent);
+    fixture = TestBed.createComponent(FileChooserComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

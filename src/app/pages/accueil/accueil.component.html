@@ -1,24 +1,31 @@
+@if (auth.role == 'admin') {
+  <button mat-raised-button routerLink="/affichage-dossiers">
+    Afficher les dossiers
+  </button>)
+
 <!--Ceci est une directive : on ajoute un comportement à un composant déjà existant pour ne pas tout casser-->
 <button mat-raised-button routerLink="/ajout-dossier">
   Ajouter un dossier
 </button>
 
+}
+
 
 <div class="row">
 
 
-  @for (dossier of dossiers; track $index) {
+  @for (statutDossier of dossiers; track $index) {
 
     <div class="col-6 mb-4">
 
-      <mat-card appearance="outlined" [class.occasion]="dossier.etat.id == 2 ">
+      <mat-card appearance="outlined" [class.occasion]="dossier.statutDossier.id == 2 ">
         <mat-card-header>
-          <mat-card-title>{{ dossier.nom }}</mat-card-title>
+          <mat-card-title>{{ dossier.nomPrenomStagiaire }}</mat-card-title>
           <mat-card-subtitle>
-            <span class="code">{{ dossier.codeArticle }}</span>
+            <span class="code">{{ dossier.codeDossier }}</span>
 
-            @for (etat of dossier.etats; track $index) {
-              <span class="etat" [ngStyle]="{backgroundColor: etat.couleur}">{{ etat.nom }}</span>
+            @for (statutDossier of dossier.; track $index) {
+              <span class="etat" [ngStyle]="{backgroundColor: statutDossier.couleur}">{{ statutDossier.nom }}</span>
             }
 
           </mat-card-subtitle>

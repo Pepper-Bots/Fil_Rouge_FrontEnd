@@ -5,7 +5,7 @@ import { Page404Component } from './pages/page404/page404.component';
 import { EditStagiaireComponent } from './pages/edit-stagiaire/edit-stagiaire.component';
 import {DossiersListComponent} from './pages/dossiers-list/dossiers-list.component';
 import {DossierDetailComponent} from './pages/dossier-detail/dossier-detail.component';
-import {DossierFormComponent} from './pages/dossier-form/dossier-form.component';
+import {DossierFormComponent} from './pages/affichage-liste-dossiers/dossier-form.component';
 
 export const routes: Routes = [
   { path: 'accueil', component: AccueilComponent },

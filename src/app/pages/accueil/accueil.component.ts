@@ -4,11 +4,13 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
 import {RouterLink} from '@angular/router';
 import {NgStyle} from '@angular/common';
+import {AuthService} from '../../services/auth.service';
 
 
 @Component({
   selector: 'app-accueil',
-  imports: [MatButtonModule,
+  imports: [
+    MatButtonModule,
     MatCardModule,
     RouterLink,
     NgStyle],
@@ -24,7 +26,8 @@ export class AccueilComponent implements OnInit {
   //   this.compteur ++
   // }
   http = inject(HttpClient); // inject pour récupérer un service
-  dossiers: Dossier[] = []
+  dossiers: Dossier[] = [];
+  auth = inject(AuthService);
 
   // méthode qui se déclenche dès que le composant a fini d'etre initialisé
   ngOnInit() {
