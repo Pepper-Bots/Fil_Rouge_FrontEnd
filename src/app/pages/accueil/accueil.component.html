@@ -1,51 +1,51 @@
-@if (auth.role == 'admin') {
-  <button mat-raised-button routerLink="/affichage-dossiers">
-    Afficher les dossiers
-  </button>)
+<!--@if (auth.role == 'admin') {-->
+<!--  <button mat-raised-button routerLink="/affichage-dossiers">-->
+<!--    Afficher les dossiers-->
+<!--  </button>)-->
 
-<!--Ceci est une directive : on ajoute un comportement à un composant déjà existant pour ne pas tout casser-->
-<button mat-raised-button routerLink="/ajout-dossier">
-  Ajouter un dossier
-</button>
+<!--&lt;!&ndash;Ceci est une directive : on ajoute un comportement à un composant déjà existant pour ne pas tout casser&ndash;&gt;-->
+<!--<button mat-raised-button routerLink="/ajout-dossier">-->
+<!--  Ajouter un dossier-->
+<!--</button>-->
 
-}
-
-
-<div class="row">
+<!--}-->
 
 
-  @for (statutDossier of dossiers; track $index) {
+<!--<div class="row">-->
 
-    <div class="col-6 mb-4">
 
-      <mat-card appearance="outlined" [class.occasion]="dossier.statutDossier.id == 2 ">
-        <mat-card-header>
-          <mat-card-title>{{ dossier.nomPrenomStagiaire }}</mat-card-title>
-          <mat-card-subtitle>
-            <span class="code">{{ dossier.codeDossier }}</span>
+<!--  @for (statutDossier of dossiers; track $index) {-->
 
-            @for (statutDossier of dossier.; track $index) {
-              <span class="etat" [ngStyle]="{backgroundColor: statutDossier.couleur}">{{ statutDossier.nom }}</span>
-            }
+<!--    <div class="col-6 mb-4">-->
 
-          </mat-card-subtitle>
-        </mat-card-header>
-        <img mat-card-image src="https://picsum.photos/id/{{dossier.id}}/600/400" alt="">
-        <mat-card-content>
-          <p>
-            {{ dossier.description }}
-          </p>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-button [routerLink]="['/modifier-dossier/', dossier.id]">Editer</button>
-          <button mat-button>Supprimer</button>
-          <button mat-button>Acheter</button>
-        </mat-card-actions>
-      </mat-card>
+<!--      <mat-card appearance="outlined" [class.occasion]="dossier.statutDossier.id == 2 ">-->
+<!--        <mat-card-header>-->
+<!--          <mat-card-title>{{ dossier.nomPrenomStagiaire }}</mat-card-title>-->
+<!--          <mat-card-subtitle>-->
+<!--            <span class="code">{{ dossier.codeDossier }}</span>-->
 
-    </div>
+<!--            @for (statutDossier of dossier.; track $index) {-->
+<!--              <span class="etat" [ngStyle]="{backgroundColor: statutDossier.couleur}">{{ statutDossier.nom }}</span>-->
+<!--            }-->
 
-  }
+<!--          </mat-card-subtitle>-->
+<!--        </mat-card-header>-->
+<!--        <img mat-card-image src="https://picsum.photos/id/{{dossier.id}}/600/400" alt="">-->
+<!--        <mat-card-content>-->
+<!--          <p>-->
+<!--            {{ dossier.description }}-->
+<!--          </p>-->
+<!--        </mat-card-content>-->
+<!--        <mat-card-actions>-->
+<!--          <button mat-button [routerLink]="['/modifier-dossier/', dossier.id]">Editer</button>-->
+<!--          <button mat-button>Supprimer</button>-->
+<!--          <button mat-button>Acheter</button>-->
+<!--        </mat-card-actions>-->
+<!--      </mat-card>-->
 
-</div>
+<!--    </div>-->
+
+<!--  }-->
+
+<!--</div>-->
 

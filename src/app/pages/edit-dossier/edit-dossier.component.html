@@ -1,21 +1,40 @@
-<h3 class="text-primary">Ajoutez un dossier :</h3>
+<h3 class="text-primary">
+  {{ dossierEdite ? "Modifier un dossier stagiaire" : "Créer un dossier stagiaire" }}
+</h3>
 
 <form [formGroup]="formulaire" (ngSubmit)="onAjoutDossier()">
 
+  <!-- Nom -->
   <mat-form-field>
-    <mat-label>Nom du dossier</mat-label>
-    <!-- Champ de saisie (input) lié au formulaire avec formControlName="name" -->
-    <input formControlName="nom" matInput placeholder="Ex. PC Asus 9874">
-
-    <!-- Vérification des erreurs pour le champ "name" -->
+    <mat-label>Nom</mat-label>
+    <input matInput formControlName="lastName" placeholder="Ex. Dupont" />
     @if (formulaire.get('nom')?.hasError('required')) {
       <mat-error>Le nom est requis</mat-error>
-    } @else if (formulaire.get('nom')?.hasError('minlength')){
-      <mat-error>Le nom doit comporter au moins 3 caractères</mat-error>
-    } @else if (formulaire.get('nom')?.hasError('maxlenght')){
-      <mat-error>Le nom doit comporter au maximum 20 caractères</mat-error>
     }
   </mat-form-field>
+
+  <!-- Prénom -->
+  <mat-form-field>
+    <mat-label>Prénom</mat-label>
+    <input matInput formControlName="firstName" placeholder="Ex. Marie" />
+    @if (formulaire.get('prenom')?.hasError('required')) {
+      <mat-error>Le prénom est requis</mat-error>
+    }
+  </mat-form-field>
+<!--  <mat-form-field>-->
+<!--    <mat-label>Nom du dossier</mat-label>-->
+<!--    &lt;!&ndash; Champ de saisie (input) lié au formulaire avec formControlName="name" &ndash;&gt;-->
+<!--    <input formControlName="nom" matInput placeholder="Ex. PC Asus 9874">-->
+
+<!--    &lt;!&ndash; Vérification des erreurs pour le champ "name" &ndash;&gt;-->
+<!--    @if (formulaire.get('nom')?.hasError('required')) {-->
+<!--      <mat-error>Le nom est requis</mat-error>-->
+<!--    } @else if (formulaire.get('nom')?.hasError('minlength')){-->
+<!--      <mat-error>Le nom doit comporter au moins 3 caractères</mat-error>-->
+<!--    } @else if (formulaire.get('nom')?.hasError('maxlenght')){-->
+<!--      <mat-error>Le nom doit comporter au maximum 20 caractères</mat-error>-->
+<!--    }-->
+<!--  </mat-form-field>-->
 
   <mat-form-field>
     <mat-label>Code article</mat-label>
