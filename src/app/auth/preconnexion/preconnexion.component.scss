@@ -1,0 +1,46 @@
+.preconnexion-container {
+  max-width: 400px;
+  margin: 5vh auto;
+  padding: 2em;
+  border-radius: 1em;
+  background: #fff;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.12);
+  text-align: center;
+}
+
+h1 {
+  color: #355C7D;
+}
+
+.subtitle {
+  font-size: 1.2em;
+  color: #888;
+  margin-bottom: 2em;
+}
+
+.actions {
+  margin-bottom: 2em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.btn {
+  padding: 0.8em 2em;
+  border: none;
+  border-radius: 2em;
+  background: linear-gradient(90deg, #355C7D 0%, #6C5B7B 100%);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.2s;
+  font-size: 1em;
+}
+.btn:hover {
+  filter: brightness(0.9);
+}
+
+.info {
+  font-size: 0.9em;
+  color: #666;
+}

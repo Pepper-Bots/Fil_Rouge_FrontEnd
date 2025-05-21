@@ -2,6 +2,7 @@ import {Component, inject, OnInit} from '@angular/core';
 import {MatTableModule} from '@angular/material/table';
 import * as http from 'node:http';
 import {HttpClient} from '@angular/common/http';
+import {Dossier} from '../../models/dossier';
 
 @Component({
   selector: 'app-affichage-dossiers',

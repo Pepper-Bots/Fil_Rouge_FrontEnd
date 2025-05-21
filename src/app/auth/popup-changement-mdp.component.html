@@ -1,0 +1,15 @@
+<div class="popup-container">
+  <h3>1ère Connexion</h3>
+  <p>Veuillez changer votre mot de passe</p>
+  <form [formGroup]="mdpForm" (ngSubmit)="onSubmit()">
+    <div>
+      <input formControlName="newPassword" type="password" placeholder="Choisissez un mot de passe" />
+    </div>
+    <div>
+      <input formControlName="confirm" type="password" placeholder="Confirmez votre choix" />
+    </div>
+    <button type="submit" [disabled]="mdpForm.invalid">Log in</button>
+    <div *ngIf="error() as errorMsg" class="error">{{ errorMsg }}</div>
+  </form>
+  <button (click)="close.emit()">Annuler</button>
+</div>

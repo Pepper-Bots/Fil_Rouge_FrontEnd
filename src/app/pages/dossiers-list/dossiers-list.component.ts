@@ -6,8 +6,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DossierService } from '../services/dossier.service';
-import { Dossier } from '../models/dossier.model';
+import { DossierService } from '../../services/crud/dossier.service';
+import { Dossier } from '../../models/dossier';
 
 @Component({
   selector: 'app-dossiers-list',
@@ -67,13 +67,13 @@ export class DossiersListComponent implements OnInit {
       this.loading = false;
     } else {
       // Utiliser le service pour récupérer les données réelles
-      this.dossierService.getDossiersPaginated(this.currentPage, this.pageSize).subscribe({
-        next: (response) => {
-          this.pageDossiers = response.content;
-          this.totalItems = response.totalElements;
+      this.dossierService.getDossiersPaginated(this.currentPage, this.pageSize).subscribe(
+        (dossiers: Dossier[]) => {
+          this.pageDossiers = dossiers;
+          this.totalItems = dossiers.length;
           this.loading = false;
         },
-        error: (err) => {
+        (err: any) => {
           console.error('Erreur lors du chargement des dossiers', err);
           this.error = 'Impossible de charger les dossiers depuis le serveur';
           this.loading = false;
@@ -81,7 +81,7 @@ export class DossiersListComponent implements OnInit {
           // Fallback vers les données fictives en cas d'erreur
           this.loadDossiers(true);
         }
-      });
+      );
     }
   }
 
@@ -120,7 +120,7 @@ export class DossiersListComponent implements OnInit {
           // Après suppression, recharger les données
           this.loadDossiers();
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error('Erreur lors de la suppression du dossier', err);
           alert('Erreur lors de la suppression du dossier');
         }
