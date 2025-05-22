@@ -63,4 +63,21 @@ export class AuthService {
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
+
+  /** Retourne le rôle à partir du JWT, ou null si pas connecté */
+  getRole(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    // Un JWT est de la forme "header.body.signature"
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+      // on décode la partie 'body'
+      const payload = JSON.parse(atob(parts[1]));
+      return payload.role || null;
+    } catch {
+      return null;
+    }
+  }
+
 }

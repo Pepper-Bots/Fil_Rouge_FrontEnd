@@ -3,13 +3,15 @@ import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
 import { AuthService } from '../auth.service';
 import { PopupChangementMdpComponent } from '../popup-changement-mdp.component';
 import { CommonModule } from '@angular/common';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
+import {HttpClient} from '@angular/common/http';
 
 
 @Component({
   selector: 'app-connexion',
   standalone: true,
   templateUrl: './connexion.component.html',
+  styleUrls: ['./connexion.component.scss'],
   imports: [
     ReactiveFormsModule,
     PopupChangementMdpComponent,
@@ -17,9 +19,12 @@ import {Router} from '@angular/router';
     ],
 })
 export class ConnexionComponent {
-  private fb = inject(FormBuilder);
-  private auth = inject(AuthService);
-  private router = inject(Router);
+   fb = inject(FormBuilder);
+   http = inject(HttpClient);
+   // notification = inject(NotificationService);
+   router = inject(Router);
+  auth = inject(AuthService);
+  route = inject(ActivatedRoute);
 
 
   loginForm = this.fb.group({
@@ -31,6 +36,15 @@ export class ConnexionComponent {
   popupVisible = false;
   popupEmail = '';
   showPassword = false;
+  connexionType = 'stagiaire'; // valeur par défaut
+
+
+  constructor() {
+    // Met à jour connexionType à chaque changement de query param dans l'URL
+    this.route.queryParamMap.subscribe(params => {
+      this.connexionType = params.get('type') ?? 'stagiaire';
+    });
+  }
 
   onSubmit() {
     if (this.loginForm.invalid) return;
@@ -63,6 +77,10 @@ export class ConnexionComponent {
 
   onClosePopup() {
     this.popupVisible = false;
+    this.error.set(null);
+    // this.router.navigate(['/accueil']);
+    // Redirige si besoin...
+
     // TODO: Redirige vers la page d'accueil ou dashboard
   }
 }

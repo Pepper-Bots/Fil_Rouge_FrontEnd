@@ -7,11 +7,12 @@ import {DossiersListComponent} from './pages/dossiers-list/dossiers-list.compone
 import {DossierDetailComponent} from './pages/dossier-detail/dossier-detail.component';
 // import {DossierFormComponent} from './pages/affichage-liste-dossiers/dossier-form.component';
 import { PreconnexionComponent } from './auth/preconnexion/preconnexion.component';
+import {authGuard} from './auth/auth.guard';
 
 
 export const routes: Routes = [
   { path: '', component: PreconnexionComponent }, // page d'accueil avant connexion
-  { path: 'accueil', component: AccueilComponent }, // accueil connecté (dashboard)
+  { path: 'accueil', component: AccueilComponent, canActivate: [authGuard] }, // accueil connecté (dashboard)
   { path: 'connexion', component: ConnexionComponent },
   //{ path: 'inscription', component: InscriptionComponent },
   { path: 'ajout-product', component: EditStagiaireComponent },
