@@ -1,0 +1,30 @@
+<form [formGroup]="evenementForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="type">Type d'événement</label>
+    <input id="type" formControlName="type" />
+    <div *ngIf="submitted && evenementForm.controls['type'].errors">
+      <small class="error">Ce champ est requis</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="motif">Motif</label>
+    <input id="motif" formControlName="motif" />
+    <div *ngIf="submitted && evenementForm.controls['motif']errors">
+      <small class="error">Ce champ est requis</small>
+    </div>
+  </div>
+
+  <div>
+    <label for="date">Date</label>
+    <input id="date" type="date" formControlName="date" />
+    <div *ngIf="submitted && evenementForm.controls['date']errors">
+      <small class="error">Ce champ est requis</small>
+    </div>
+  </div>
+
+  <button type="submit">Déclarer l'événement</button>
+
+  <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+</form>

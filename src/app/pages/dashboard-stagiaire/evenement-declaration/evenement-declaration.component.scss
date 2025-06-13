@@ -1,0 +1,31 @@
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    font-weight: bold;
+  }
+
+  input {
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  .error {
+    color: red;
+    font-size: 12px;
+  }
+
+  .success {
+    color: green;
+    font-weight: bold;
+  }
+
+  button {
+    width: fit-content;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+}

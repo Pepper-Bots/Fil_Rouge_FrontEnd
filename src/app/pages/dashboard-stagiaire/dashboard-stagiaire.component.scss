@@ -1,0 +1,38 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh; /* hauteur plein écran */
+  background-color: #013662;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.side-panel {
+  width: 60px;
+  background-color: #013662;
+  position: relative;
+  transition: width 0.3s ease;
+  overflow: hidden;
+
+  &.open {
+    width: 150px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  }
+
+  .toggle-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .form-container {
+    margin-top: 50px; /* ne pas cacher le bouton */
+    padding: 10px;
+  }
+}

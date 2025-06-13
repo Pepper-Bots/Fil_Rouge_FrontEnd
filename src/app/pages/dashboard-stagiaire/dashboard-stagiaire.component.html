@@ -1,0 +1,29 @@
+<div class="dashboard-container" style="background-color: #013662; height: 100vh; display:flex;">
+  <!-- Contenu principal -->
+  <div class="main-content">
+
+<h1>Bienvenue sur votre dashboard</h1>
+
+<!--    <div style="background-color: lightcoral; height: 200px;">-->
+<!--      Test couleur-->
+<!--    </div>-->
+
+    <!-- Autres contenus du dashboard ici -->
+    <p>Ici tu peux ajouter tes widgets, infos, etc.</p>
+  </div>
+
+  <!-- Bande latérale (fermée ou ouverte) -->
+  <div class="side-panel" [class.open]="isPanelOpen">
+    <!-- Bouton toggle, icône hamburger / croix -->
+    <button class="toggle-button" (click)="togglePanel()" aria-label="Toggle panneau déclaration">
+      <!-- Icône X ou ≡ selon état -->
+      {{ isPanelOpen ? '✕' : '☰' }}
+    </button>
+
+    <div class="form-container" *ngIf="isPanelOpen">
+
+<!-- Intégration du composant déclaration d'événement -->
+<app-evenement-declaration></app-evenement-declaration>
+    </div>
+  </div>
+</div>

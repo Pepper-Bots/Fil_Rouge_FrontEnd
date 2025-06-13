@@ -1,15 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
-import { AuthService } from '../auth.service';
-import { PopupChangementMdpComponent } from '../popup-changement-mdp.component';
 import { CommonModule } from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
+import {AuthService} from '../../../services/auth.service';
+import {PopupChangementMdpComponent} from '../popup-changement-mdp/popup-changement-mdp.component';
 
 
 @Component({
   selector: 'app-connexion',
-  standalone: true,
   templateUrl: './connexion.component.html',
   styleUrls: ['./connexion.component.scss'],
   imports: [

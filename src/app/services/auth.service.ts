@@ -81,3 +81,5 @@ export class AuthService {
   }
 
 }
+
+//  service métier pour la logique d’authentification, gestion du token, login, logout, etc

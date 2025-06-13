@@ -1,0 +1,45 @@
+src/app/page/
+  └── auth/
+       ├── connexion/
+       │     ├── auth-login.component.ts
+       │     ├── auth-login.component.html
+       │     └── ...
+       ├── preconnexion/
+       │     ├── auth-register.component.ts
+       │     ├── auth-register.component.html
+       │     └── ...
+       ├── password-change/
+       │     ├── password-change.component.ts
+       │     └── ...
+       └── auth.module.ts   (module dédié auth si besoin)
+
+-----------------
+
+création de composants avec cette structure
+
+ng generate component page/auth/connexion/auth-login
+ng generate component page/auth/preconnexion/auth-register
+ng generate component page/auth/password-change/password-change
+
+-----------------------
+
+# Avantages de ce découpage
+
+
+- Clarté et maintenance facilitée
+- Modularité et isolation de la partie auth
+- Facilité pour mettre en place le lazy loading par module
+- Cohérence avec une architecture scalable
+
+----------------------------
+
+pages/
+ └── dashboard-stagiaire/
+       ├── dashboard-stagiaire.component.ts  (page routée)
+       └── evenement-declaration.component.ts (composant enfant)
+
+----------------
+
+13/06 -> A FAIRE :
+
+Mettre composants enfants dans leur parent -> comme evenement déclaration dans dashboard stagiaire

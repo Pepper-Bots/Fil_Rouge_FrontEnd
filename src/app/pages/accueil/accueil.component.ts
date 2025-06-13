@@ -2,8 +2,8 @@ import {Component, inject, OnInit} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
-import {AuthService} from '../../auth/auth.service';
 import {Dossier} from '../../models/dossier';
+import {AuthService} from '../../services/auth.service';
 
 
 @Component({

@@ -1,7 +1,7 @@
 import { Component, inject, Input, Output, EventEmitter, signal } from '@angular/core';
 import {FormBuilder, ReactiveFormsModule, Validators} from '@angular/forms';
-import { AuthService } from './auth.service';
 import {CommonModule} from '@angular/common';
+import {AuthService} from '../../../services/auth.service';
 
 
 @Component({
@@ -42,3 +42,5 @@ export class PopupChangementMdpComponent {
     });
   }
 }
+
+// Composant UI pour afficher une popup (modale) de changement mot de passe.

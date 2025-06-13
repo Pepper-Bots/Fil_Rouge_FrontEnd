@@ -16,3 +16,5 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req);
 };
+
+//  Intercepteur HTTP Angular qui intercepte toutes les requêtes sortantes pour y ajouter le token JWT dans les headers.
