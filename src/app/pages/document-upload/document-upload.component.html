@@ -1,1 +1,15 @@
-<p>document-upload works!</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <label>Type de document</label>
+  <select formControlName="type">
+    <option value="">-- Choisir --</option>
+    <option value="CNI">CNI</option>
+    <option value="JUSTIFICATIF_DOMICILE">Justificatif de domicile</option>
+    <option value="CV">CV</option>
+  </select>
+
+
+  <label>Fichier</label>
+  <input type="file" (change)="onFileChange($event)" accept=".pdf,.jpg,.png" />
+
+  <button type="submit" [disabled]="form.invalid">Envoyer</button>
+</form>

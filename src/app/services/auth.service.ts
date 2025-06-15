@@ -1,43 +1,76 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {jwtDecode} from 'jwt-decode';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
-export interface AuthResponse {
-  token: string;
-  premiereConnexion?: boolean;
-  email?: string;
+
+interface JwtPayload {
+  id: number;
+  email: string;
+  role: string;
+  premiereConnexion: boolean;
+  exp: number;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
+
 export class AuthService {
-  private apiUrl = 'http://localhost:8080'; // adapte selon ton env
-  private tokenKey = 'jwt_token';
+
+  private tokenKey = 'jwt';
+  private apiUrl = '/api/auth'; // adapter si besoin
   private premiereConnexionSubject = new BehaviorSubject<boolean>(false);
 
-  http = inject(HttpClient);
-  router = inject(Router);
+  connecte = false;
+  role: string | null = null;
 
-  premiereConnexion$ = this.premiereConnexionSubject.asObservable();
+  constructor(
 
-  /** Connexion utilisateur */
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/connexion`, { email, password }).pipe(
-      tap(response => {
-        if (response.token) {
-          localStorage.setItem(this.tokenKey, response.token);
-          // Gère le flag première connexion (pour le popup)
-          if (response.premiereConnexion) {
-            this.premiereConnexionSubject.next(true);
-          } else {
-            this.premiereConnexionSubject.next(false);
-          }
-        }
-      })
-    );
+    private http: HttpClient,
+    private router: Router
+  ) {
+    const jwt = localStorage.getItem(this.tokenKey);
+    if (jwt) {
+      this.decodeJwt(jwt); // -> pas vraiment 'connexion' mais plutot extraction de données  -> on renomme
+    }
   }
 
-  /** Changement du mot de passe à la première connexion */
+  login(email: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/connexion`, { email, password });
+  }
+
+  /**
+   * Décode le JWT, stocke le token, et extrait les infos utiles
+   */
+  decodeJwt(jwt: string) {
+    localStorage.setItem(this.tokenKey, jwt);
+    try {
+      const payload = jwtDecode<JwtPayload>(jwt);
+      this.role = payload.role;
+      this.connecte = true;
+      this.premiereConnexionSubject.next(payload.premiereConnexion);
+    } catch (e) {
+      console.error('Erreur de décodage JWT', e);
+      this.logout();
+    }
+  }
+
+  /**
+   * Déconnexion manuelle
+   */
+  logout() {
+    localStorage.removeItem(this.tokenKey);
+    this.connecte = false;
+    this.role = null;
+    this.premiereConnexionSubject.next(false);
+    this.router.navigate(['/connexion']);
+  }
+
+  /**
+   * Envoie le changement de mot de passe
+   */
   changePassword(email: string, newPassword: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/change-password`, { email, newPassword }).pipe(
       tap(() => {
@@ -47,39 +80,49 @@ export class AuthService {
     );
   }
 
-  /** Déconnexion */
-  logout() {
-    localStorage.removeItem(this.tokenKey);
-    this.premiereConnexionSubject.next(false);
-    this.router.navigate(['/connexion']);
-  }
-
-  /** Retourne le JWT */
-  getToken(): string| null {
-    return localStorage.getItem(this.tokenKey);
-  }
-
-  /** Utilitaire pour savoir si l'utilisateur est connecté */
+  /**
+   * Utilitaire : est-ce qu'un JWT valide est présent ?
+   */
   isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
-
-  /** Retourne le rôle à partir du JWT, ou null si pas connecté */
-  getRole(): string | null {
     const token = this.getToken();
-    if (!token) return null;
-    // Un JWT est de la forme "header.body.signature"
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (!token) return false;
+
     try {
-      // on décode la partie 'body'
-      const payload = JSON.parse(atob(parts[1]));
-      return payload.role || null;
+      const payload = jwtDecode<JwtPayload>(token);
+      const now = Date.now() / 1000;
+      return payload.exp > now;
     } catch {
-      return null;
+      return false;
     }
   }
 
+  /**
+   * Récupère le token
+   */
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
+
+  /**
+   * Accès au rôle (utile pour afficher des éléments conditionnellement)
+   */
+  getRole(): string | null {
+    return this.role;
+  }
+
+
+  /**
+   * Est-ce une première connexion ?
+   */
+  get premiereConnexion(): boolean {
+    return this.premiereConnexionSubject.getValue();
+  }
+
+  /**
+   * Permet aux guards ou aux composants de souscrire à premièreConnexion
+   */
+  premiereConnexion$: Observable<boolean> = this.premiereConnexionSubject.asObservable();
 }
 
 //  service métier pour la logique d’authentification, gestion du token, login, logout, etc
+// AuthService sera injecté dans connection et dans app pour les faire communiquer

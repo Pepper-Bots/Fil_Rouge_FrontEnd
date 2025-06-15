@@ -21,9 +21,18 @@
       </div>
 
       <div>
-        <label for="password">Votre mot de passe</label>
-        <input id="password" formControlName="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" />
-        <button type="button" (click)="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+        <label for="password">Mot de passe</label>
+        <div style="display: flex; gap: 10px;">
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+          />
+          <button type="button" (click)="showPassword = !showPassword">
+            {{ showPassword ? 'Masquer' : 'Afficher' }}
+          </button>
+        </div>
+
       </div>
 
       <button type="submit" [disabled]="loginForm.invalid">Se connecter</button>

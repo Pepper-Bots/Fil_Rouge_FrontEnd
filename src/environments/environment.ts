@@ -1,1 +1,5 @@
-export const environment = {};
+// Sert à typer notre variable
+
+export const environment = {
+  serverUrl: ""
+};

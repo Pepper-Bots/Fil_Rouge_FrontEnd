@@ -47,12 +47,17 @@ export class ConnexionComponent {
 
   onSubmit() {
     if (this.loginForm.invalid) return;
+
     const { email, password } = this.loginForm.value;
 
     this.auth.login(email!, password!).subscribe({
       next: (res) => {
-        // redirection si succès
-        if (res.premiereConnexion) {
+
+        // 💡 Stocker et décoder le JWT
+        this.auth.decodeJwt(res.token);
+
+        // 🎯 Gérer la première connexion
+        if (res.premiereConnexion || this.auth.premiereConnexion) {
           this.popupEmail = email || '';
           this.popupVisible = true;
         } else {
@@ -70,13 +75,14 @@ export class ConnexionComponent {
           this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
         }
       }
-
     });
   }
 
   onClosePopup() {
     this.popupVisible = false;
     this.error.set(null);
+    this.error.set(null);
+    this.router.navigate(['/changer-mdp']);
     // this.router.navigate(['/accueil']);
     // Redirige si besoin...
 
