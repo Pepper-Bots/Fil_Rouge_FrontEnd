@@ -53,19 +53,34 @@ export class ConnexionComponent {
     console.log(this.loginForm.value) // debug
     console.log("Email envoyé :", email);
 
-    this.auth.login("bruno@example.com", "root").subscribe({
+    this.auth.login(email!, password!).subscribe({
       next: (res) => {
 
+        console.log('Réponse du back :', res);
+
+        // Ici res doit contenir { token: "...", ... }
         // 💡 Stocker et décoder le JWT
         this.auth.decodeJwt(res.token);
 
-        // 🎯 Gérer la première connexion
-        if (res.premiereConnexion || this.auth.premiereConnexion) {
-          this.popupEmail = email || '';
-          this.popupVisible = true;
+        const role = this.auth.getRole();
+        console.log('Rôle extrait du JWT:', role);
+
+        // 🎯 Si c'est une première connexion, redirige vers /changer-mdp
+        if (res.premiereConnexion) {
+          console.log('Première connexion -> redirection');
+          this.router.navigate(['/changer-mdp']);
         } else {
-          // redirection vers la page d'accueil.
-          this.router.navigate(['/accueil']);
+          // Redirection selon le rôle
+          if (role === 'ADMINISTRATEUR') {
+            console.log('Redirection admin');
+            this.router.navigate(['/admin/dashboard']);
+          } else if (role === 'STAGIAIRE') {
+            console.log('Redirection stagiaire');
+            this.router.navigate(['/stagiaire/dashboard']);
+          } else {
+            console.log('Redirection accueil');
+            this.router.navigate(['/accueil']);
+          }
         }
       },
       error: (err) => {
