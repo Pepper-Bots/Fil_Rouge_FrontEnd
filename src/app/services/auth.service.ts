@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import {jwtDecode} from 'jwt-decode';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import {environment} from '../../environments/environment';
 
 
 interface JwtPayload {
@@ -20,7 +21,7 @@ interface JwtPayload {
 export class AuthService {
 
   private tokenKey = 'jwt';
-  private apiUrl = '/api/auth'; // adapter si besoin
+  private apiUrl = environment.serverUrl + 'api/auth'; // adapter si besoin
   private premiereConnexionSubject = new BehaviorSubject<boolean>(false);
 
   connecte = false;

@@ -1,5 +1,5 @@
 // montrer les vraies valeurs des variables d'environnement
 
 export const environment = {
-  serverUrl: "http://mon-site.com/"
+  serverUrl: "http://mon-site.com:8080/"
 };

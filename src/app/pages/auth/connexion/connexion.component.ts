@@ -50,7 +50,10 @@ export class ConnexionComponent {
 
     const { email, password } = this.loginForm.value;
 
-    this.auth.login(email!, password!).subscribe({
+    console.log(this.loginForm.value) // debug
+    console.log("Email envoyé :", email);
+
+    this.auth.login("bruno@example.com", "root").subscribe({
       next: (res) => {
 
         // 💡 Stocker et décoder le JWT
