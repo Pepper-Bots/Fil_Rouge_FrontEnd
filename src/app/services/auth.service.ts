@@ -49,14 +49,16 @@ export class AuthService {
     localStorage.setItem(this.tokenKey, jwt);
     try {
       const payload = jwtDecode<JwtPayload>(jwt);
-      this.role = payload.role;
-      this.connecte = true;
+      this.role = payload.role; // bien mettre à jour le rôle
+      localStorage.setItem('role', payload.role); // Ajoute ça pour forcer la persistance
+      this.connecte = true;     // bien mettre à jour connecté
       this.premiereConnexionSubject.next(payload.premiereConnexion);
     } catch (e) {
       console.error('Erreur de décodage JWT', e);
       this.logout();
     }
   }
+
 
   /**
    * Déconnexion manuelle
@@ -89,10 +91,17 @@ export class AuthService {
     if (!token) return false;
 
     try {
-      const payload = jwtDecode<JwtPayload>(token);
-      const now = Date.now() / 1000;
-      return payload.exp > now;
+      const payload = jwtDecode<any>(token);
+      console.log('Payload JWT dans isAuthenticated:', payload);
+      const now = Math.floor(Date.now() / 1000); // ⚠️ met bien en SECONDES
+      // Retourne false si exp absent ou passé
+      console.log('exp payload:', payload.exp, 'now:', now, 'diff:', payload.exp - now);
+      const result = payload.exp && payload.exp > now;
+      console.log('Résultat isAuthenticated:', result);
+      return result;
+
     } catch {
+
       return false;
     }
   }
@@ -101,7 +110,9 @@ export class AuthService {
    * Récupère le token
    */
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    // Préfère lire depuis le localStorage pour être sûr à 100%
+    return localStorage.getItem('role');
+    // return localStorage.getItem(this.tokenKey);
   }
 
   /**

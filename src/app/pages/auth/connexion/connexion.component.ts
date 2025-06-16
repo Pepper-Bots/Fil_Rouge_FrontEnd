@@ -5,6 +5,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
 import {AuthService} from '../../../services/auth.service';
 import {PopupChangementMdpComponent} from '../popup-changement-mdp/popup-changement-mdp.component';
+import {jwtDecode} from 'jwt-decode';
 
 
 @Component({
@@ -46,6 +47,7 @@ export class ConnexionComponent {
   }
 
   onSubmit() {
+
     if (this.loginForm.invalid) return;
 
     const { email, password } = this.loginForm.value;
@@ -56,7 +58,9 @@ export class ConnexionComponent {
     this.auth.login(email!, password!).subscribe({
       next: (res) => {
 
-        console.log('Réponse du back :', res);
+        console.log('Token JWT:', res.token);
+        const payload = jwtDecode<any>(res.token);
+        console.log('Payload JWT:', payload);
 
         // Ici res doit contenir { token: "...", ... }
         // 💡 Stocker et décoder le JWT
@@ -70,13 +74,16 @@ export class ConnexionComponent {
           console.log('Première connexion -> redirection');
           this.router.navigate(['/changer-mdp']);
         } else {
-          // Redirection selon le rôle
-          if (role === 'ADMINISTRATEUR') {
-            console.log('Redirection admin');
-            this.router.navigate(['/admin/dashboard']);
-          } else if (role === 'STAGIAIRE') {
-            console.log('Redirection stagiaire');
-            this.router.navigate(['/stagiaire/dashboard']);
+          // 🟢 Redirection robuste selon le rôle
+          const roleNorm = role?.toUpperCase() ?? '';
+
+          if (roleNorm.includes('ADMIN')) {
+            console.log('Redirection dashboard admin');
+            console.log('role en localStorage:', localStorage.getItem('role'));
+            this.router.navigate(['/dashboard-admin']);
+          } else if (roleNorm.includes('STAGIAIRE')) {
+            console.log('Redirection dashboard stagiaire');
+            this.router.navigate(['/dashboard-stagiaire']);
           } else {
             console.log('Redirection accueil');
             this.router.navigate(['/accueil']);

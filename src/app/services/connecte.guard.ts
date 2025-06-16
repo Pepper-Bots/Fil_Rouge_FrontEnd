@@ -10,8 +10,10 @@ export const connecteGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // Non connecté → on redirige vers /connexion
-  if (!auth.connecte || !auth.isAuthenticated()) {
+  console.log('Guard - isAuthenticated:', auth.isAuthenticated(), 'role:', auth.getRole());
+
+// Vérifie uniquement le JWT (stateless, fiable)
+if (!auth.isAuthenticated()) {
     return router.parseUrl('/connexion');
   }
 
