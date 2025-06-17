@@ -111,8 +111,8 @@ export class AuthService {
    */
   getToken(): string | null {
     // Préfère lire depuis le localStorage pour être sûr à 100%
-    return localStorage.getItem('role');
-    // return localStorage.getItem(this.tokenKey);
+    // return localStorage.getItem('role');
+    return localStorage.getItem(this.tokenKey);
   }
 
   /**

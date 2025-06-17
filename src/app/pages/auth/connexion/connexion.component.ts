@@ -46,6 +46,7 @@ export class ConnexionComponent {
     });
   }
 
+  // Méthode appelée au clic sur le bouton "Connexion"
   onSubmit() {
 
     if (this.loginForm.invalid) return;

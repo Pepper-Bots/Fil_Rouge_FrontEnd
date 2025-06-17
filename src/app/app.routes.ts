@@ -9,6 +9,7 @@ import { PreconnexionComponent } from './pages/auth/preconnexion/preconnexion.co
 import { DashboardAdminComponent } from './pages/dashboard-admin/dashboard-admin.component';
 import {DashboardStagiaireComponent} from './pages/dashboard-stagiaire/dashboard-stagiaire.component';
 import {connecteGuard} from './services/connecte.guard';
+import {PopupChangementMdpComponent} from './pages/auth/popup-changement-mdp/popup-changement-mdp.component';
 
 
 export const routes: Routes = [
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: 'dossier/:id', component: DossierDetailComponent },
   { path: 'dashboard-stagiaire', component: DashboardStagiaireComponent, canActivate: [connecteGuard] },
   { path: 'dashboard-admin', component: DashboardAdminComponent, canActivate: [connecteGuard] },
+  { path: 'changer-mdp', component: PopupChangementMdpComponent },
   { path: '', redirectTo: 'accueil', pathMatch: 'full' },
   { path: '**', component: Page404Component },
 
