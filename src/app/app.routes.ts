@@ -24,6 +24,9 @@ export const routes: Routes = [
   { path: 'dashboard-stagiaire', component: DashboardStagiaireComponent, canActivate: [connecteGuard] },
   { path: 'dashboard-admin', component: DashboardAdminComponent, canActivate: [connecteGuard] },
   { path: 'changer-mdp', component: PopupChangementMdpComponent },
+  // Exemple de config de routes :
+  { path: 'dashboard-admin', component: DashboardAdminComponent, canActivate: [RoleGuard], data: { role: 'ROLE_ADMIN' } },
+  { path: 'dashboard-stagiaire', component: DashboardStagiaireComponent, canActivate: [RoleGuard], data: { role: 'ROLE_STAGIAIRE' } },
   { path: '', redirectTo: 'accueil', pathMatch: 'full' },
   { path: '**', component: Page404Component },
 

@@ -1,10 +1,61 @@
 .dashboard-admin-container {
+  max-width: 1000px;
+  margin: 2rem auto;
   padding: 2rem;
-  background: #f6f8fa;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  background: #f9fafe;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
-h2 { color: #013662; }
-ul { list-style: none; padding: 0; }
-li { margin: 1rem 0; }
-a { color: #27b7ff; text-decoration: none; font-weight: bold; }
+
+.kpi-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.kpi-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 8px rgba(30,60,110,0.09);
+  padding: 1.5rem 2rem;
+  min-width: 180px;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kpi-label {
+  font-size: 1.05rem;
+  color: #246;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: #0466c8;
+}
+
+h3 {
+  margin-top: 2rem;
+  color: #156;
+}
+
+ul {
+  list-style: disc inside;
+  margin-bottom: 2rem;
+}
+
+li {
+  padding: 0.4rem 0;
+  font-size: 1.05rem;
+}
+
+.dashboard-loading {
+  padding: 3rem;
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+}
