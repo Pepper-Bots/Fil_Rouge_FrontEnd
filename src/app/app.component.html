@@ -1,52 +1,164 @@
-<!--Vue-->
+<!--&lt;!&ndash;Vue&ndash;&gt;-->
 
-<nav
-  class="navbar navbar-expand-sm navbar-dark bg-dark"
-  aria-label="Third navbar example"
->
-  <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/accueil">MNS Commerce</a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarsExample03"
-      aria-controls="navbarsExample03"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
+<!--<nav-->
+<!--  class="navbar navbar-expand-sm navbar-dark bg-dark"-->
+<!--  aria-label="Third navbar example"-->
+<!--&gt;-->
+<!--  <div class="container-fluid">-->
+<!--    <a class="navbar-brand" routerLink="/accueil">NovaTech Academy</a>-->
+<!--    <button-->
+<!--      class="navbar-toggler"-->
+<!--      type="button"-->
+<!--      data-bs-toggle="collapse"-->
+<!--      data-bs-target="#navbarsExample03"-->
+<!--      aria-controls="navbarsExample03"-->
+<!--      aria-expanded="false"-->
+<!--      aria-label="Toggle navigation"-->
+<!--    >-->
+<!--      <span class="navbar-toggler-icon"></span>-->
+<!--    </button>-->
 
-    <div class="collapse navbar-collapse" id="navbarsExample03">
-      <ul class="navbar-nav me-auto mb-2 mb-sm-0">
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            routerLink="/accueil"
-            routerLinkActive="page-actuelle"
-            >Accueil</a
-          >
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link"
-            routerLink="/connexion"
-            routerLinkActive="page-actuelle"
-            >Connexion</a
-          >
-        </li>
-      </ul>
-      <form>
-        <input
-          class="form-control"
-          type="text"
-          placeholder="Search"
-          aria-label="Search"
-        />
-      </form>
+<!--    <div class="collapse navbar-collapse" id="navbarsExample03">-->
+<!--      <ul class="navbar-nav me-auto mb-2 mb-sm-0">-->
+<!--        <li class="nav-item">-->
+<!--          <a-->
+<!--            class="nav-link"-->
+<!--            routerLink="/accueil"-->
+<!--            routerLinkActive="page-actuelle"-->
+<!--            >Accueil</a-->
+<!--          >-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a-->
+<!--            class="nav-link"-->
+<!--            routerLink="/connexion"-->
+<!--            routerLinkActive="page-actuelle"-->
+<!--            >Connexion</a-->
+<!--          >-->
+<!--        </li>-->
+<!--      </ul>-->
+<!--      <form>-->
+<!--        <input-->
+<!--          class="form-control"-->
+<!--          type="text"-->
+<!--          placeholder="Search"-->
+<!--          aria-label="Search"-->
+<!--        />-->
+<!--      </form>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</nav>-->
+
+<!--<router-outlet></router-outlet>-->
+
+<!-- app.component.html -->
+
+<div class="app-container" [class.with-sidebar]="showSidebar">
+
+  <!-- 🎛️ SIDEBAR -->
+  <aside
+    *ngIf="showSidebar"
+    class="sidebar"
+    [class.collapsed]="sidebarCollapsed">
+
+    <!-- En-tête sidebar -->
+    <div class="sidebar-header">
+      <div class="logo" *ngIf="!sidebarCollapsed">
+        <img src="assets/logo-novatech.png" alt="NovaTech Academy" class="logo-img">
+        <span class="logo-text">NovaTech Academy</span>
+      </div>
+      <div class="logo-mini" *ngIf="sidebarCollapsed">
+        <img src="assets/logo-mini.png" alt="NA" class="logo-mini-img">
+      </div>
     </div>
-  </div>
-</nav>
 
-<router-outlet></router-outlet>
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+
+        <!-- Dashboard -->
+        <li class="nav-item">
+          <a [routerLink]="dashboardLink" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-dashboard"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Dashboard</span>
+          </a>
+        </li>
+
+        <!-- Mes formations (Stagiaire) -->
+        <li class="nav-item" *ngIf="userRole.toUpperCase().includes('STAGIAIRE')">
+          <a routerLink="/mes-formations" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-book"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Mes formations</span>
+          </a>
+        </li>
+
+        <!-- Gestion utilisateurs (Admin) -->
+        <li class="nav-item" *ngIf="userRole.toUpperCase().includes('ADMIN')">
+          <a routerLink="/gestion-utilisateurs" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-users"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Utilisateurs</span>
+          </a>
+        </li>
+
+        <!-- Formations (Admin) -->
+        <li class="nav-item" *ngIf="userRole.toUpperCase().includes('ADMIN')">
+          <a routerLink="/gestion-formations" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-course"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Formations</span>
+          </a>
+        </li>
+
+        <!-- Mon profil -->
+        <li class="nav-item">
+          <a routerLink="/profil" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-user"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Mon Profil</span>
+          </a>
+        </li>
+
+        <!-- Documents -->
+        <li class="nav-item">
+          <a routerLink="/documents" routerLinkActive="active" class="nav-link">
+            <i class="icon icon-file"></i>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Documents</span>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- Footer sidebar -->
+    <div class="sidebar-footer">
+      <button class="logout-btn" (click)="logout()">
+        <i class="icon icon-logout"></i>
+        <span *ngIf="!sidebarCollapsed">Déconnexion</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 📱 MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- Top bar avec bouton menu -->
+    <header *ngIf="showSidebar" class="top-bar">
+      <button class="menu-toggle" (click)="toggleSidebar()">
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+      </button>
+
+      <div class="top-bar-actions">
+        <!-- Ici vous pourrez ajouter des actions (notifications, profil, etc.) -->
+        <span class="user-info" *ngIf="isAuthenticated">
+          Bienvenue, {{ auth.getUser()?.nom || 'Utilisateur' }}
+        </span>
+      </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <div class="content" [class.full-height]="!showSidebar">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+</div>

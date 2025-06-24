@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import {DashboardAdminService} from '../../services/crud/dashboard-admin.service';
+import {NgForOf, NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-dashboard-admin',
   templateUrl: './dashboard-admin.component.html',
+  imports: [
+    NgForOf,
+    NgIf
+  ],
   styleUrls: ['./dashboard-admin.component.scss']
 })
 export class DashboardAdminComponent implements OnInit {

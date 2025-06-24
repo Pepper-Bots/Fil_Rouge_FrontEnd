@@ -5,11 +5,47 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {environment} from '../../environments/environment';
 
-
-interface JwtPayload {
+// Interfaces correspondant à mon backend Spring Boot
+interface BaseUser {
   id: number;
   email: string;
-  role: string;
+  nom: string;
+  prenom: string;
+  dateCreation: string;
+  premiereConnexion: boolean;
+  actif: boolean;
+}
+
+interface Admin extends BaseUser {
+  role: 'ADMIN' | 'SUPER_ADMIN';
+  departement?: string;
+  permissions?: string[];
+}
+
+interface Stagiaire extends BaseUser {
+  role: 'STAGIAIRE';
+  dateNaissance?: string;
+  telephone?: string;
+  adresse?: string;
+  niveauEtudes?: string;
+  formations?: number[]; // IDs des formations
+}
+
+// Union type pour tous les utilisateurs
+type User = Admin | Stagiaire;
+
+
+interface JwtPayload {
+  adresse: string;
+  phone: string;
+  dateNaissance: string;
+  departement: string;
+  permissions: any[];
+  id: number;
+  email: string;
+  role: 'ADMIN' | 'SUPER_ADMIN' | 'STAGIAIRE';
+  lastName: string;
+  firstName: string;
   premiereConnexion: boolean;
   exp: number;
 }
@@ -28,7 +64,6 @@ export class AuthService {
   role: string | null = null;
 
   constructor(
-
     private http: HttpClient,
     private router: Router
   ) {
@@ -38,8 +73,9 @@ export class AuthService {
     }
   }
 
+
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/connexion`, { email, password });
+    return this.http.post(`${this.apiUrl}/connexion`, {email, password});
   }
 
   /**
@@ -75,7 +111,7 @@ export class AuthService {
    * Envoie le changement de mot de passe
    */
   changePassword(email: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/change-password`, { email, newPassword }).pipe(
+    return this.http.post(`${this.apiUrl}/change-password`, {email, newPassword}).pipe(
       tap(() => {
         // Une fois changé, le flag saute
         this.premiereConnexionSubject.next(false);
@@ -134,6 +170,154 @@ export class AuthService {
    * Permet aux guards ou aux composants de souscrire à premièreConnexion
    */
   premiereConnexion$: Observable<boolean> = this.premiereConnexionSubject.asObservable();
+
+  /**
+   * Récupère les informations de l'utilisateur depuis le JWT avec typage fort
+   * @returns User | null - Les infos utilisateur typées selon le rôle
+   */
+  getUser(): User | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const payload = jwtDecode<JwtPayload>(token);
+
+      // Construction de l'objet utilisateur selon le rôle
+      const baseUser: BaseUser = {
+        id: payload.id,
+        email: payload.email,
+        nom: payload.lastName,
+        prenom: payload.firstName,
+        dateCreation: new Date().toISOString(), // ou depuis le payload si disponible
+        premiereConnexion: payload.premiereConnexion,
+        actif: true // ou depuis le payload si disponible
+      };
+      // Retour typé selon le rôle
+      switch (payload.role) {
+        case 'ADMIN':
+        case 'SUPER_ADMIN':
+          return {
+            ...baseUser,
+            role: payload.role,
+            departement: payload.departement,
+            permissions: payload.permissions || []
+          } as Admin;
+
+        case 'STAGIAIRE':
+          return {
+            ...baseUser,
+            role: payload.role,
+            dateNaissance: payload.dateNaissance,
+            telephone: payload.phone,
+            adresse: payload.adresse,
+            formations: [] // À récupérer via une autre API si nécessaire
+          } as Stagiaire;
+
+        default:
+          console.warn('Rôle utilisateur non reconnu:', payload.role);
+          return null;
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des infos utilisateur:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Admin
+   * @returns boolean
+   */
+  isAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Super Admin
+   * @returns boolean
+   */
+  isSuperAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'SUPER_ADMIN';
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Stagiaire
+   * @returns boolean
+   */
+  isStagiaire(): boolean {
+    const user = this.getUser();
+    return user?.role === 'STAGIAIRE';
+  }
+
+  /**
+   * Récupère l'utilisateur typé comme Admin (avec vérification)
+   * @returns Admin | null
+   */
+  getAdmin(): Admin | null {
+    const user = this.getUser();
+    return this.isAdmin() ? user as Admin : null;
+  }
+
+  /**
+   * Récupère l'utilisateur typé comme Stagiaire (avec vérification)
+   * @returns Stagiaire | null
+   */
+  getStagiaire(): Stagiaire | null {
+    const user = this.getUser();
+    return this.isStagiaire() ? user as Stagiaire : null;
+  }
+
+  /**
+   * Récupère le nom complet de l'utilisateur
+   * @returns string | null
+   */
+  getUserDisplayName(): string | null {
+    const user = this.getUser();
+    if (!user) return null;
+
+    return `${user.prenom} ${user.nom}`;
+  }
+
+  /**
+   * Récupère les permissions de l'admin connecté
+   * @returns string[] | null
+   */
+  getUserPermissions(): string[] | null {
+    const admin = this.getAdmin();
+    return admin?.permissions || null;
+  }
+
+  /**
+   * Vérifie si l'utilisateur a une permission spécifique
+   * @param permission - La permission à vérifier
+   * @returns boolean
+   */
+  hasPermission(permission: string): boolean {
+    const permissions = this.getUserPermissions();
+    return permissions?.includes(permission) || false;
+  }
+
+  /**
+   * Récupère l'ID de l'utilisateur connecté
+   * @returns number | null
+   */
+  getUserId(): number | null {
+    const user = this.getUser();
+    return user ? user.id : null;
+  }
+
+  /**
+   * Récupère l'email de l'utilisateur connecté
+   * @returns string | null
+   */
+  getUserEmail(): string | null {
+    const user = this.getUser();
+    return user ? user.email : null;
+  }
 }
 
 //  service métier pour la logique d’authentification, gestion du token, login, logout, etc
