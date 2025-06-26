@@ -1,50 +1,216 @@
-<div class="connexion-flex-wrapper">
-  <!-- Colonne image -->
-  <div class="connexion-image-side">
+<!--<div class="connexion-flex-wrapper">-->
+<!--  &lt;!&ndash; Colonne image &ndash;&gt;-->
+<!--  <div class="connexion-image-side">-->
+<!--    <img-->
+<!--      [src]="connexionType === 'admin'-->
+<!--    ? 'assets/img/connexion-admin.jpg'-->
+<!--    : 'assets/img/connexion-stagiaire.jpg'"-->
+<!--      [alt]="connexionType === 'admin' ? 'Connexion administrateur' : 'Connexion stagiaire'"-->
+<!--      style="max-width: 300px; border: 2px solid green;"-->
+<!--    />-->
+
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Colonne formulaire &ndash;&gt;-->
+<!--  <div class="login-container">-->
+<!--    <h2>Bienvenue dans le portail de connexion de NovaTech Academy.</h2>-->
+<!--    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">-->
+<!--      <div>-->
+<!--        <label for="email">Identifiant ou adresse email</label>-->
+<!--        <input id="email" formControlName="email" type="email" autocomplete="username" />-->
+<!--      </div>-->
+
+<!--      <div>-->
+<!--        <label for="password">Mot de passe</label>-->
+<!--        <div style="display: flex; gap: 10px;">-->
+<!--          <input-->
+<!--            id="password"-->
+<!--            [type]="showPassword ? 'text' : 'password'"-->
+<!--            formControlName="password"-->
+<!--          />-->
+<!--          <button type="button" (click)="showPassword = !showPassword">-->
+<!--            {{ showPassword ? 'Masquer' : 'Afficher' }}-->
+<!--          </button>-->
+<!--        </div>-->
+
+<!--      </div>-->
+
+<!--      <button type="submit" [disabled]="loginForm.invalid">Se connecter</button>-->
+<!--      <a routerLink="/mot-de-passe-oublie">Mot de passe oublié ?</a>-->
+<!--      <div *ngIf="error() as errorMsg" class="error">{{ errorMsg }}</div>-->
+<!--    </form>-->
+
+<!--    &lt;!&ndash; POPUP première connexion &ndash;&gt;-->
+<!--    <app-popup-changement-mdp-->
+<!--      *ngIf="popupVisible"-->
+<!--      [email]="popupEmail"-->
+<!--      (close)="onClosePopup()">-->
+<!--    </app-popup-changement-mdp>-->
+<!--  </div>-->
+<!--</div>-->
+
+<!-------------------------------------------------------------------------------------->
+
+
+<!--<div class="login-container">-->
+<!--  &lt;!&ndash; Panel gauche &ndash;&gt;-->
+<!--  <div class="left-panel">-->
+<!--    <div class="woman-illustration">-->
+<!--      <div class="woman-avatar"></div>-->
+<!--      <h1 class="brand-title">NovaTech Academy</h1>-->
+<!--      <p class="brand-subtitle">Excellence in Technology Education</p>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; Panel droit &ndash;&gt;-->
+<!--  <div class="right-panel">-->
+<!--    <div class="login-form">-->
+<!--      <h2 class="welcome-text">Bienvenue dans le portail de connexion de NovaTech Academy.</h2>-->
+
+<!--      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">-->
+<!--        <div class="form-group">-->
+<!--          <label class="form-label" for="email">Identifiant ou adresse email</label>-->
+<!--          <input-->
+<!--            type="text"-->
+<!--            id="email"-->
+<!--            formControlName="email"-->
+<!--            class="form-input"-->
+<!--            placeholder="Votre identifiant"-->
+<!--            autocomplete="username">-->
+<!--        </div>-->
+
+<!--        <div class="form-group">-->
+<!--          <label class="form-label" for="password">Votre mot de passe</label>-->
+<!--          <div class="password-wrapper">-->
+<!--            <input-->
+<!--              [type]="showPassword ? 'text' : 'password'"-->
+<!--              id="password"-->
+<!--              formControlName="password"-->
+<!--              class="form-input"-->
+<!--              placeholder="••••••••">-->
+<!--            <button-->
+<!--              type="button"-->
+<!--              class="password-toggle"-->
+<!--              (click)="showPassword = !showPassword">-->
+<!--              {{ showPassword ? 'Show' : 'Hide' }}-->
+<!--            </button>-->
+<!--          </div>-->
+<!--        </div>-->
+
+<!--        <div class="forgot-password">-->
+<!--          <a routerLink="/mot-de-passe-oublie">Mot de passe oublié?</a>-->
+<!--        </div>-->
+
+<!--        <button-->
+<!--          type="submit"-->
+<!--          class="login-button"-->
+<!--          [disabled]="loginForm.invalid">-->
+<!--          Se connecter-->
+<!--        </button>-->
+<!--      </form>-->
+
+<!--      &lt;!&ndash; Affichage des erreurs &ndash;&gt;-->
+<!--      <div *ngIf="error() as errorMsg" class="error-message">-->
+<!--        {{ errorMsg }}-->
+<!--      </div>-->
+
+<!--      <h3 class="first-connection">Première connexion ?</h3>-->
+<!--      <p class="first-connection-text">-->
+<!--        Contactez votre administrateur pour obtenir vos identifiants de connexion et commencer votre parcours d'apprentissage.-->
+<!--      </p>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; POPUP première connexion &ndash;&gt;-->
+<!--  <app-popup-changement-mdp-->
+<!--    *ngIf="popupVisible"-->
+<!--    [email]="popupEmail"-->
+<!--    (close)="onClosePopup()">-->
+<!--  </app-popup-changement-mdp>-->
+<!--</div>-->
+
+<!----------------------------------------------------------->
+
+<div class="login-container">
+  <!-- Panel gauche avec image -->
+  <div class="left-panel">
+    <div class="image-overlay"></div>
     <img
       [src]="connexionType === 'admin'
-    ? 'assets/img/connexion-admin.jpg'
-    : 'assets/img/connexion-stagiaire.jpg'"
+        ? 'assets/img/connexion-admin.jpg'
+        : 'assets/img/connexion-stagiaire.jpg'"
       [alt]="connexionType === 'admin' ? 'Connexion administrateur' : 'Connexion stagiaire'"
-      style="max-width: 300px; border: 2px solid green;"
-    />
+      class="connection-image">
 
+    <div class="brand-overlay">
+      <h1 class="brand-title">NovaTech Academy</h1>
+      <p class="brand-subtitle">Excellence in Technology Education</p>
+    </div>
   </div>
 
-  <!-- Colonne formulaire -->
-  <div class="login-container">
-    <h2>Bienvenue dans le portail de connexion de NovaTech Academy.</h2>
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <div>
-        <label for="email">Identifiant ou adresse email</label>
-        <input id="email" formControlName="email" type="email" autocomplete="username" />
-      </div>
+  <!-- Panel droit -->
+  <div class="right-panel">
+    <div class="login-form">
+      <h2 class="welcome-text">Bienvenue dans le portail de connexion de NovaTech Academy.</h2>
 
-      <div>
-        <label for="password">Mot de passe</label>
-        <div style="display: flex; gap: 10px;">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label class="form-label" for="email">Identifiant ou adresse email</label>
           <input
-            id="password"
-            [type]="showPassword ? 'text' : 'password'"
-            formControlName="password"
-          />
-          <button type="button" (click)="showPassword = !showPassword">
-            {{ showPassword ? 'Masquer' : 'Afficher' }}
-          </button>
+            type="text"
+            id="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="Votre identifiant"
+            autocomplete="username">
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="password">Votre mot de passe</label>
+          <div class="password-wrapper">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              class="form-input"
+              placeholder="••••••••">
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="showPassword = !showPassword">
+              {{ showPassword ? 'Show' : 'Hide' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="forgot-password">
+          <a routerLink="/mot-de-passe-oublie">Mot de passe oublié?</a>
+        </div>
+
+        <button
+          type="submit"
+          class="login-button"
+          [disabled]="loginForm.invalid">
+          Se connecter
+        </button>
+      </form>
+
+      <!-- Affichage des erreurs -->
+      <div *ngIf="error() as errorMsg" class="error-message">
+        {{ errorMsg }}
       </div>
 
-      <button type="submit" [disabled]="loginForm.invalid">Se connecter</button>
-      <a routerLink="/mot-de-passe-oublie">Mot de passe oublié ?</a>
-      <div *ngIf="error() as errorMsg" class="error">{{ errorMsg }}</div>
-    </form>
-
-    <!-- POPUP première connexion -->
-    <app-popup-changement-mdp
-      *ngIf="popupVisible"
-      [email]="popupEmail"
-      (close)="onClosePopup()">
-    </app-popup-changement-mdp>
+      <h3 class="first-connection">Première connexion ?</h3>
+      <p class="first-connection-text">
+        Contactez votre administrateur pour obtenir vos identifiants de connexion et commencer votre parcours d'apprentissage.
+      </p>
+    </div>
   </div>
+
+  <!-- POPUP première connexion -->
+  <app-popup-changement-mdp
+    *ngIf="popupVisible"
+    [email]="popupEmail"
+    (close)="onClosePopup()">
+  </app-popup-changement-mdp>
 </div>
