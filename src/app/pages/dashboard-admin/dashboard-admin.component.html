@@ -1,1 +1,53 @@
+<<<<<<< Updated upstream
 <p>dashboard-admin works!</p>
+=======
+<!--Dashboard Admin :
+
+📥 Liste des documents reçus des stagiaires
+👁️ Visualisation des documents
+✅ Validation/Rejet des documents
+📊 Statistiques des soumissions
+👥 Gestion des stagiaires-->
+
+<div class="dashboard-admin-container" *ngIf="!loading">
+  <h2>Bienvenue sur le Dashboard Admin !</h2>
+  <p>Vous pouvez gérer ici les utilisateurs, formations, dossiers, et voir les KPIs.</p>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Stagiaires inscrits</div>
+      <div class="kpi-value">{{ nbStagiaires }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Formations en cours</div>
+      <div class="kpi-value">{{ nbFormations }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Intervenants actifs</div>
+      <div class="kpi-value">{{ nbIntervenants }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Documents en attente</div>
+      <div class="kpi-value">{{ nbDocsAttente }}</div>
+    </div>
+  </div>
+
+  <h3>Inscriptions en attente</h3>
+  <ul>
+    <li *ngFor="let inscription of inscriptionsEnAttente">
+      {{ inscription.stagiaireNom }} - {{ inscription.formationNom }} (Dossier : {{ inscription.statutDossier }})
+    </li>
+  </ul>
+
+  <h3>Documents à vérifier</h3>
+  <ul>
+    <li *ngFor="let doc of docsAttente">
+      {{ doc.nomFichier }} - {{ doc.stagiaireNom }} -
+      <a [href]="doc.urlFichier" target="_blank">Voir</a>
+    </li>
+  </ul>
+</div>
+<div *ngIf="loading" class="dashboard-loading">
+  Chargement du dashboard...
+</div>
+>>>>>>> Stashed changes

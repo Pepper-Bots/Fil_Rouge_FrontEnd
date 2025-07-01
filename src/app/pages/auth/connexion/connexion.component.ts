@@ -46,15 +46,23 @@ export class ConnexionComponent {
   }
 
   onSubmit() {
-    if (this.loginForm.invalid) return;
+    console.log('🔥 onSubmit appelé !'); // ← Ajoutez ça
+    console.log('Form valid ?', this.loginForm.valid); // ← Et ça
+
+    if (this.loginForm.invalid) {
+      console.log('⚠️ Formulaire invalide !');
+      return;
+    }
 
     const { email, password } = this.loginForm.value;
+    console.log('📧 Email:', email, 'Password:', password); // ← Et ça
 
     console.log(this.loginForm.value) // debug
     console.log("Email envoyé :", email);
 
     this.auth.login("bruno@example.com", "root").subscribe({
       next: (res) => {
+<<<<<<< Updated upstream
 
         // 💡 Stocker et décoder le JWT
         this.auth.decodeJwt(res.token);
@@ -63,12 +71,31 @@ export class ConnexionComponent {
         if (res.premiereConnexion || this.auth.premiereConnexion) {
           this.popupEmail = email || '';
           this.popupVisible = true;
+=======
+        console.log('Réponse complète:', res);
+        console.log('Token JWT:', res.token);
+
+        // ✅ Le JWT est déjà décodé par this.auth.decodeJwt() dans mockLogin
+        // Pas besoin de le re-décoder ici
+
+        const role = this.auth.getRole();
+        console.log('Rôle extrait du JWT:', role);
+
+        // 🎯 Récupérer premiereConnexion depuis le service, pas depuis res
+        const premiereConnexion = this.auth.premiereConnexion;
+
+        // 🎯 Si c'est une première connexion, redirige vers /changer-mdp
+        if (premiereConnexion) {
+          console.log('Première connexion -> redirection');
+          this.router.navigate(['/changer-mdp']);
+>>>>>>> Stashed changes
         } else {
           // redirection vers la page d'accueil.
           this.router.navigate(['/accueil']);
         }
       },
       error: (err) => {
+<<<<<<< Updated upstream
         // 🔴 Ici on gère les messages venant du back
         if (err.status === 401) {
           this.error.set("Identifiant ou mot de passe incorrect.");
@@ -77,6 +104,23 @@ export class ConnexionComponent {
         } else {
           this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
         }
+=======
+
+        console.log('Erreur complète:', err); // ← Ajoutez ça pour debug
+
+        // 🔴 Votre mock rejette les erreurs sans statut HTTP
+        // On simplifie temporairement
+        this.error.set("Identifiant ou mot de passe incorrect.");
+
+        // // 🔴 Ici, on gère les messages venant du back
+        // if (err.status === 401) {
+        //   this.error.set("Identifiant ou mot de passe incorrect.");
+        // } else if (err.status === 403) {
+        //   this.error.set(err.error?.message ?? "Votre compte n'est pas activé.");
+        // } else {
+        //   this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
+        // }
+>>>>>>> Stashed changes
       }
     });
   }

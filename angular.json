@@ -74,9 +74,20 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
-            }
-          },
-          "defaultConfiguration": "production"
+            },
+            "staging": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ]
+            },
+            "defaultConfiguration": "production"
+          }
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
@@ -86,6 +97,9 @@
             },
             "development": {
               "buildTarget": "admin-mns-front:build:development"
+            },
+            "staging": {
+              "buildTarget": "admin-mns-front:build:staging"
             }
           },
           "defaultConfiguration": "development"

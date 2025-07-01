@@ -39,7 +39,27 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
+<<<<<<< Updated upstream
     return this.http.post(`${this.apiUrl}/connexion`, { email, password });
+=======
+    console.log('mockAuth activé ?', (environment as any).mockAuth); // vérifie quel environnement est utilisé
+
+    // Si mockAuth est activé dans l'environnement
+    if ((environment as any).mockAuth) {
+      console.log('🔥 MOCK ACTIVÉ - Pas d\'appel HTTP'); // ← Ajoutez cette ligne
+      return this.mockLogin(email, password);
+    }
+
+    console.log('🌐 APPEL BACKEND RÉEL'); // ← Ajoutez cette ligne aussi
+    // Sinon, appel réel du back
+    return this.http.post(`${this.apiUrl}/connexion`, {email, password}).pipe(
+      tap((response:any)=> {
+        if(response.token) {
+          this.decodeJwt(response.token);
+        }
+    })
+    );
+>>>>>>> Stashed changes
   }
 
   /**
@@ -123,6 +143,194 @@ export class AuthService {
    * Permet aux guards ou aux composants de souscrire à premièreConnexion
    */
   premiereConnexion$: Observable<boolean> = this.premiereConnexionSubject.asObservable();
+<<<<<<< Updated upstream
+=======
+
+  /**
+   * Récupère les informations de l'utilisateur depuis le JWT avec typage fort
+   * @returns User | null - Les infos utilisateur typées selon le rôle
+   */
+  getUser(): User | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const payload = jwtDecode<JwtPayload>(token);
+
+      // Construction de l'objet utilisateur selon le rôle
+      const baseUser: BaseUser = {
+        id: payload.id,
+        email: payload.email,
+        nom: payload.lastName,
+        prenom: payload.firstName,
+        dateCreation: new Date().toISOString(), // ou depuis le payload si disponible
+        premiereConnexion: payload.premiereConnexion,
+        actif: true // ou depuis le payload si disponible
+      };
+      // Retour typé selon le rôle
+      switch (payload.role) {
+        case 'ADMIN':
+        case 'SUPER_ADMIN':
+          return {
+            ...baseUser,
+            role: payload.role,
+            departement: payload.departement,
+            permissions: payload.permissions || []
+          } as Admin;
+
+        case 'STAGIAIRE':
+          return {
+            ...baseUser,
+            role: payload.role,
+            dateNaissance: payload.dateNaissance,
+            telephone: payload.phone,
+            adresse: payload.adresse,
+            formations: [] // À récupérer via une autre API si nécessaire
+          } as Stagiaire;
+
+        default:
+          console.warn('Rôle utilisateur non reconnu:', payload.role);
+          return null;
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des infos utilisateur:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Admin
+   * @returns boolean
+   */
+  isAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Super Admin
+   * @returns boolean
+   */
+  isSuperAdmin(): boolean {
+    const user = this.getUser();
+    return user?.role === 'SUPER_ADMIN';
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est un Stagiaire
+   * @returns boolean
+   */
+  isStagiaire(): boolean {
+    const user = this.getUser();
+    return user?.role === 'STAGIAIRE';
+  }
+
+  /**
+   * Récupère l'utilisateur typé comme Admin (avec vérification)
+   * @returns Admin | null
+   */
+  getAdmin(): Admin | null {
+    const user = this.getUser();
+    return this.isAdmin() ? user as Admin : null;
+  }
+
+  /**
+   * Récupère l'utilisateur typé comme Stagiaire (avec vérification)
+   * @returns Stagiaire | null
+   */
+  getStagiaire(): Stagiaire | null {
+    const user = this.getUser();
+    return this.isStagiaire() ? user as Stagiaire : null;
+  }
+
+  /**
+   * Récupère le nom complet de l'utilisateur
+   * @returns string | null
+   */
+  getUserDisplayName(): string | null {
+    const user = this.getUser();
+    if (!user) return null;
+
+    return `${user.prenom} ${user.nom}`;
+  }
+
+  /**
+   * Récupère les permissions de l'admin connecté
+   * @returns string[] | null
+   */
+  getUserPermissions(): string[] | null {
+    const admin = this.getAdmin();
+    return admin?.permissions || null;
+  }
+
+  /**
+   * Vérifie si l'utilisateur a une permission spécifique
+   * @param permission - La permission à vérifier
+   * @returns boolean
+   */
+  hasPermission(permission: string): boolean {
+    const permissions = this.getUserPermissions();
+    return permissions?.includes(permission) || false;
+  }
+
+  /**
+   * Récupère l'ID de l'utilisateur connecté
+   * @returns number | null
+   */
+  getUserId(): number | null {
+    const user = this.getUser();
+    return user ? user.id : null;
+  }
+
+  /**
+   * Récupère l'email de l'utilisateur connecté
+   * @returns string | null
+   */
+  getUserEmail(): string | null {
+    const user = this.getUser();
+    return user ? user.email : null;
+  }
+
+  private mockLogin(email: string, password: string): Observable<any> {
+
+    // Identifiants de test - accepte n'importe quel email/password
+    const mockPayload = {
+      id: 1,
+      email: email,
+      role: 'ADMIN', // ou 'SUPER_ADMIN' ou 'STAGIAIRE'
+      lastName: 'Test',
+      firstName: 'Utilisateur',
+      premiereConnexion: false,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // expire dans 24h
+      adresse: '123 Rue Test',
+      phone: '0123456789',
+      dateNaissance: '1990-01-01',
+      departement: 'IT',
+      permissions: ['READ', 'WRITE']
+    };
+
+    // Création d'un faux JWT
+    const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'HS256' }));
+    const payload = btoa(JSON.stringify(mockPayload));
+    const mockJWT = `${header}.${payload}.fake-signature`;
+
+
+    // Simulation d'une réponse après 1 seconde
+    return new Observable(observer => {
+      setTimeout(() => {
+        this.decodeJwt(mockJWT);
+        observer.next({
+          token: mockJWT,
+          success: true
+          });
+          observer.complete();
+          }, 1000);
+      });
+    }
+>>>>>>> Stashed changes
 }
 
 //  service métier pour la logique d’authentification, gestion du token, login, logout, etc

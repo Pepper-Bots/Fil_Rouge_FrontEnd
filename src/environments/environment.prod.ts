@@ -1,5 +1,7 @@
 // montrer les vraies valeurs des variables d'environnement
 
 export const environment = {
-  serverUrl: "http://mon-site.com:8080/"
+  production: true,
+  serverUrl: "http://mon-site.com:8080/",
+  mockAuth: false,
 };

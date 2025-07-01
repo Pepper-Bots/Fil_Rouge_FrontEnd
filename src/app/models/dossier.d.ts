@@ -19,17 +19,6 @@ export interface Dossier {
   nomCreateur?: string;
 }
 
-export interface StatutDocument {
-  id: number;
-  nom: string;
-  description?: string;
-}
 
-export interface Document {
-  id: number;
-  nom: string;
-  fileUrl: string;
-  dateUpload: string;
-  statut: string;
-  type: string;
-}
+
+
