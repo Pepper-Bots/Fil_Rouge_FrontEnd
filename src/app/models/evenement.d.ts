@@ -2,17 +2,17 @@ export interface Evenement {
   id?: number;
   stagiaireId: number;
   type: 'ABSENCE' | 'RETARD';
-  dateEvenement: string;
+  date: string;
   motif: string;
   description?: string;
-  statut: 'EN_ATTENTE' | 'JUSTIFIE' | 'INJUSTIFIE';
+  statut?: 'EN_ATTENTE' | 'JUSTIFIE' | 'INJUSTIFIE';
   documentId?: number;
-  dateDeclaration: string;
+  dateDeclaration?: string;
   dateTraitement?: string;
   adminId?: number;
 }
 
-export interface Document {
+export interface DocumentEvenement {
   id?: number;
   nom: string;
   type: string;

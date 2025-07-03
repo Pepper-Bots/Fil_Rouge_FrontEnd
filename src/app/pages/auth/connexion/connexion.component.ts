@@ -62,7 +62,6 @@ export class ConnexionComponent {
 
     this.auth.login("bruno@example.com", "root").subscribe({
       next: (res) => {
-<<<<<<< Updated upstream
 
         // 💡 Stocker et décoder le JWT
         this.auth.decodeJwt(res.token);
@@ -71,7 +70,7 @@ export class ConnexionComponent {
         if (res.premiereConnexion || this.auth.premiereConnexion) {
           this.popupEmail = email || '';
           this.popupVisible = true;
-=======
+
         console.log('Réponse complète:', res);
         console.log('Token JWT:', res.token);
 
@@ -88,14 +87,13 @@ export class ConnexionComponent {
         if (premiereConnexion) {
           console.log('Première connexion -> redirection');
           this.router.navigate(['/changer-mdp']);
->>>>>>> Stashed changes
         } else {
           // redirection vers la page d'accueil.
           this.router.navigate(['/accueil']);
         }
-      },
-      error: (err) => {
-<<<<<<< Updated upstream
+      }
+
+      error: (err:any) => {
         // 🔴 Ici on gère les messages venant du back
         if (err.status === 401) {
           this.error.set("Identifiant ou mot de passe incorrect.");
@@ -104,7 +102,6 @@ export class ConnexionComponent {
         } else {
           this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
         }
-=======
 
         console.log('Erreur complète:', err); // ← Ajoutez ça pour debug
 
@@ -120,9 +117,14 @@ export class ConnexionComponent {
         // } else {
         //   this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
         // }
->>>>>>> Stashed changes
       }
-    });
+    },
+    error: (err:any) => {
+      if (err.status === 401) {
+      this.error.set("Identifiant ou mot de passe incorrect.");}
+    }
+      },
+    );
   }
 
   onClosePopup() {

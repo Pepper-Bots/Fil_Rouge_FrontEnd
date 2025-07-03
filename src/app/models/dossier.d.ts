@@ -1,6 +1,7 @@
 // models/dossier.model.ts
 export interface Dossier {
   id: number;
+  dossier: string;
   codeDossier: string;
   dateCreation: string;
   lastUpdated?: string;
@@ -17,6 +18,14 @@ export interface Dossier {
   nomPrenomStagiaire?: string;
   titreFormation?: string;
   nomCreateur?: string;
+
+  }
+
+  export interface EtatDossiers {
+  id: number;
+  nom: string;
+  couleur: string;
+  etat: string;
 }
 
 

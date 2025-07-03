@@ -5,11 +5,45 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {environment} from '../../environments/environment';
 
-
-interface JwtPayload {
+// Interfaces correspondant à votre backend Spring Boot
+interface BaseUser {
   id: number;
   email: string;
-  role: string;
+  nom: string;
+  prenom: string;
+  dateCreation: string;
+  premiereConnexion: boolean;
+  actif: boolean;
+}
+
+interface Admin extends BaseUser {
+  role: 'ADMIN' | 'SUPER_ADMIN';
+  departement?: string;
+  permissions?: string[];
+}
+
+interface Stagiaire extends BaseUser {
+  role: 'STAGIAIRE';
+  dateNaissance?: string;
+  telephone?: string;
+  adresse?: string;
+  niveauEtudes?: string;
+  formations?: number[];
+}
+
+type User = Admin | Stagiaire;
+
+interface JwtPayload {
+  adresse: string;
+  phone: string;
+  dateNaissance: string;
+  departement: string;
+  permissions: any[];
+  id: number;
+  email: string;
+  role: 'ADMIN' | 'SUPER_ADMIN' | 'STAGIAIRE';
+  lastName: string;
+  firstName: string;
   premiereConnexion: boolean;
   exp: number;
 }
@@ -34,32 +68,28 @@ export class AuthService {
   ) {
     const jwt = localStorage.getItem(this.tokenKey);
     if (jwt) {
-      this.decodeJwt(jwt); // -> pas vraiment 'connexion' mais plutot extraction de données  -> on renomme
+      this.decodeJwt(jwt);
     }
   }
 
   login(email: string, password: string): Observable<any> {
-<<<<<<< Updated upstream
-    return this.http.post(`${this.apiUrl}/connexion`, { email, password });
-=======
-    console.log('mockAuth activé ?', (environment as any).mockAuth); // vérifie quel environnement est utilisé
+    console.log('mockAuth activé ?', (environment as any).mockAuth);
 
     // Si mockAuth est activé dans l'environnement
     if ((environment as any).mockAuth) {
-      console.log('🔥 MOCK ACTIVÉ - Pas d\'appel HTTP'); // ← Ajoutez cette ligne
+      console.log('🔥 MOCK ACTIVÉ - Pas d\'appel HTTP');
       return this.mockLogin(email, password);
     }
 
-    console.log('🌐 APPEL BACKEND RÉEL'); // ← Ajoutez cette ligne aussi
+    console.log('🌐 APPEL BACKEND RÉEL');
     // Sinon, appel réel du back
     return this.http.post(`${this.apiUrl}/connexion`, {email, password}).pipe(
-      tap((response:any)=> {
-        if(response.token) {
+      tap((response: any) => {
+        if (response.token) {
           this.decodeJwt(response.token);
         }
-    })
+      })
     );
->>>>>>> Stashed changes
   }
 
   /**
@@ -70,6 +100,7 @@ export class AuthService {
     try {
       const payload = jwtDecode<JwtPayload>(jwt);
       this.role = payload.role;
+      localStorage.setItem('role', payload.role);
       this.connecte = true;
       this.premiereConnexionSubject.next(payload.premiereConnexion);
     } catch (e) {
@@ -83,6 +114,7 @@ export class AuthService {
    */
   logout() {
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('role');
     this.connecte = false;
     this.role = null;
     this.premiereConnexionSubject.next(false);
@@ -110,8 +142,9 @@ export class AuthService {
 
     try {
       const payload = jwtDecode<JwtPayload>(token);
-      const now = Date.now() / 1000;
-      return payload.exp > now;
+      const now = Math.floor(Date.now() / 1000);
+      const result = payload.exp && payload.exp > now;
+      return <boolean>result;
     } catch {
       return false;
     }
@@ -131,7 +164,6 @@ export class AuthService {
     return this.role;
   }
 
-
   /**
    * Est-ce une première connexion ?
    */
@@ -140,11 +172,10 @@ export class AuthService {
   }
 
   /**
+   * Observable première connexion
    * Permet aux guards ou aux composants de souscrire à premièreConnexion
    */
   premiereConnexion$: Observable<boolean> = this.premiereConnexionSubject.asObservable();
-<<<<<<< Updated upstream
-=======
 
   /**
    * Récupère les informations de l'utilisateur depuis le JWT avec typage fort
@@ -169,6 +200,8 @@ export class AuthService {
         premiereConnexion: payload.premiereConnexion,
         actif: true // ou depuis le payload si disponible
       };
+
+
       // Retour typé selon le rôle
       switch (payload.role) {
         case 'ADMIN':
@@ -229,56 +262,7 @@ export class AuthService {
   }
 
   /**
-   * Récupère l'utilisateur typé comme Admin (avec vérification)
-   * @returns Admin | null
-   */
-  getAdmin(): Admin | null {
-    const user = this.getUser();
-    return this.isAdmin() ? user as Admin : null;
-  }
-
-  /**
-   * Récupère l'utilisateur typé comme Stagiaire (avec vérification)
-   * @returns Stagiaire | null
-   */
-  getStagiaire(): Stagiaire | null {
-    const user = this.getUser();
-    return this.isStagiaire() ? user as Stagiaire : null;
-  }
-
-  /**
-   * Récupère le nom complet de l'utilisateur
-   * @returns string | null
-   */
-  getUserDisplayName(): string | null {
-    const user = this.getUser();
-    if (!user) return null;
-
-    return `${user.prenom} ${user.nom}`;
-  }
-
-  /**
-   * Récupère les permissions de l'admin connecté
-   * @returns string[] | null
-   */
-  getUserPermissions(): string[] | null {
-    const admin = this.getAdmin();
-    return admin?.permissions || null;
-  }
-
-  /**
-   * Vérifie si l'utilisateur a une permission spécifique
-   * @param permission - La permission à vérifier
-   * @returns boolean
-   */
-  hasPermission(permission: string): boolean {
-    const permissions = this.getUserPermissions();
-    return permissions?.includes(permission) || false;
-  }
-
-  /**
    * Récupère l'ID de l'utilisateur connecté
-   * @returns number | null
    */
   getUserId(): number | null {
     const user = this.getUser();
@@ -294,6 +278,58 @@ export class AuthService {
     return user ? user.email : null;
   }
 
+  // /**
+  //  * Récupère l'utilisateur typé comme Admin (avec vérification)
+  //  * @returns Admin | null
+  //  */
+  // getAdmin(): Admin | null {
+  //   const user = this.getUser();
+  //   return this.isAdmin() ? user as Admin : null;
+  // }
+  //
+  // /**
+  //  * Récupère l'utilisateur typé comme Stagiaire (avec vérification)
+  //  * @returns Stagiaire | null
+  //  */
+  // getStagiaire(): Stagiaire | null {
+  //   const user = this.getUser();
+  //   return this.isStagiaire() ? user as Stagiaire : null;
+  // }
+  //
+  // /**
+  //  * Récupère le nom complet de l'utilisateur
+  //  * @returns string | null
+  //  */
+  // getUserDisplayName(): string | null {
+  //   const user = this.getUser();
+  //   if (!user) return null;
+  //
+  //   return `${user.prenom} ${user.nom}`;
+  // }
+  //
+  // /**
+  //  * Récupère les permissions de l'admin connecté
+  //  * @returns string[] | null
+  //  */
+  // getUserPermissions(): string[] | null {
+  //   const admin = this.getAdmin();
+  //   return admin?.permissions || null;
+  // }
+  //
+  // /**
+  //  * Vérifie si l'utilisateur a une permission spécifique
+  //  * @param permission - La permission à vérifier
+  //  * @returns boolean
+  //  */
+  // hasPermission(permission: string): boolean {
+  //   const permissions = this.getUserPermissions();
+  //   return permissions?.includes(permission) || false;
+  // }
+  //
+
+  /**
+   * Mock login pour développement
+   */
   private mockLogin(email: string, password: string): Observable<any> {
 
     // Identifiants de test - accepte n'importe quel email/password
@@ -330,7 +366,6 @@ export class AuthService {
           }, 1000);
       });
     }
->>>>>>> Stashed changes
 }
 
 //  service métier pour la logique d’authentification, gestion du token, login, logout, etc

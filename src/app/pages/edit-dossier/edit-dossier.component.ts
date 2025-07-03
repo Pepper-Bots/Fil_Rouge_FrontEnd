@@ -7,8 +7,13 @@ import {HttpClient} from '@angular/common/http';
 import {MatOption, MatSelect, MatSelectModule} from '@angular/material/select';
 import {ActivatedRoute} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {Dossier, EtatDossiers} from '../../models/dossier';
 
 // ReactiveFormsModule utilisé pour valider le formulaire
+
+interface EtatDossier {
+}
+
 // FormsModule bloque le formulaire pour ne pas recharger la page
 @Component({
   selector: 'app-edit-dossier',
@@ -37,6 +42,7 @@ export class EditDossierComponent implements OnInit {
   // etiquettes: Etiquette[] = [];
   dossierEdite: Dossier | null = null;
   notification = inject(MatSnackBar);
+  private etats: EtatDossier[] | undefined;
 
 
   ngOnInit() {

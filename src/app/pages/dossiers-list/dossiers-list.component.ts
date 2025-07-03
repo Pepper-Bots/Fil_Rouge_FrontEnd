@@ -24,7 +24,14 @@ import { Dossier } from '../../models/dossier';
   styleUrls: ['./dossiers-list.component.scss']
 })
 export class DossiersListComponent implements OnInit {
-  dossiers: Dossier[] = [];
+  dossiers: {
+    id: number;
+    codeDossier: string;
+    dateCreation: string;
+    statutDossier: { id: number; nom: string; couleur: string; description: string };
+    nomPrenomStagiaire: string;
+    titreFormation: string
+  }[] = [];
   pageDossiers: Dossier[] = [];
   pageSize = 20;
   currentPage = 0; // Angular Material est 0-indexed
