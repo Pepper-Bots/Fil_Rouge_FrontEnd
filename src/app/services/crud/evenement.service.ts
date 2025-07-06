@@ -2,7 +2,9 @@ import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject, delay, Observable, of} from 'rxjs';
 import {environment} from '../../../environments/environment';
-import {Evenement, MotifAbsence, DocumentEvenement} from '../../models/evenement';
+import {DocumentEvenement} from '../../models/document-evenement';
+import {Evenement} from '../../models/evenement';
+import {MotifAbsence} from '../../models/motif-absence';
 
 
 @Injectable({

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DossierService } from '../../services/crud/dossier.service';
 import { Dossier } from '../../models/dossier';
+import {StatutDossier} from '../../models/statut-dossier';
 
 @Component({
   selector: 'app-dossiers-list',
@@ -18,28 +19,34 @@ import { Dossier } from '../../models/dossier';
     MatButtonModule,
     MatIconModule,
     MatPaginatorModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    RouterLink
   ],
   templateUrl: './dossiers-list.component.html',
   styleUrls: ['./dossiers-list.component.scss']
 })
 export class DossiersListComponent implements OnInit {
-  dossiers: {
-    id: number;
-    codeDossier: string;
-    dateCreation: string;
-    statutDossier: { id: number; nom: string; couleur: string; description: string };
-    nomPrenomStagiaire: string;
-    titreFormation: string
-  }[] = [];
-  pageDossiers: Dossier[] = [];
+  dossiers: Dossier[] = [];      // Toutes les données (pour mock)
+  pageDossiers: Dossier[] = [];  // Page courante affichée
   pageSize = 20;
-  currentPage = 0; // Angular Material est 0-indexed
+  currentPage = 0;
   totalItems = 0;
   pageSizeOptions = [5, 10, 20, 50];
 
   loading = true;
   error: string | null = null;
+
+  statutColorMap: { [key: string]: string } = {
+    'Complet': '#28a745',
+    'En cours': '#ffc107',
+    'Incomplet': '#dc3545'
+  };
+
+  getStatutColor(statut: StatutDossier | undefined): string {
+    if (!statut) return '#ccc';
+    return this.statutColorMap[statut.nomStatut] || '#ccc';
+  }
+
 
   constructor(
     private dossierService: DossierService,
@@ -52,6 +59,8 @@ export class DossiersListComponent implements OnInit {
 
   loadDossiers(useMock: boolean = false): void {
     this.loading = true;
+    this.error = null;
+
 
     if (useMock) {
       // Utiliser des données fictives pour les tests
@@ -61,36 +70,41 @@ export class DossiersListComponent implements OnInit {
         dateCreation: new Date().toISOString(),
         statutDossier: {
           id: i % 3 + 1,
-          nom: i % 3 === 0 ? 'Complet' : i % 3 === 1 ? 'En cours' : 'Incomplet',
-          couleur: i % 3 === 0 ? '#28a745' : i % 3 === 1 ? '#ffc107' : '#dc3545',
-          description: `Description du statut ${i % 3 + 1}`
+          nomStatut: i % 3 === 0 ? 'Complet' : i % 3 === 1 ? 'En cours' : 'Incomplet',
+          couleur: i % 3 === 0 ? '#28a745' : i % 3 === 1 ? '#ffc107' : '#dc3545'
         },
         nomPrenomStagiaire: `Stagiaire ${i + 1}`,
-        titreFormation: `Formation ${i % 5 + 1}`
-      }));
+        titreFormation: `Formation ${i % 5 + 1}`,
+        stagiaire: { id: 1, lastName: "Dupont", firstName: "Jean", email: "", enabled: true }, // valeurs fictives !
+        formation: { id: 1, nom: "Formation test" },
+        createur: { id: 1, lastName: "Admin", firstName: "Admin", email: "", enabled: true }
+      } as Dossier));
+
 
       this.totalItems = this.dossiers.length;
       this.updatePage();
       this.loading = false;
     } else {
       // Utiliser le service pour récupérer les données réelles
-      this.dossierService.getDossiersPaginated(this.currentPage, this.pageSize).subscribe(
-        (dossiers: Dossier[]) => {
-          this.pageDossiers = dossiers;
-          this.totalItems = dossiers.length;
+      this.dossierService.getDossiersPaginated(this.currentPage, this.pageSize).subscribe({
+        complete(): void {
+        },
+        next: (res: { dossiers: Dossier[], totalItems: number }) => {
+          this.pageDossiers = res.dossiers;
+          this.totalItems = res.totalItems;
           this.loading = false;
         },
-        (err: any) => {
+        error:(err: any) => {
           console.error('Erreur lors du chargement des dossiers', err);
           this.error = 'Impossible de charger les dossiers depuis le serveur';
           this.loading = false;
 
-          // Fallback vers les données fictives en cas d'erreur
-          this.loadDossiers(true);
-        }
-      );
-    }
+        // Fallback vers les données fictives en cas d'erreur
+        // this.loadDossiers(true);
+      }
+    });
   }
+}
 
   updatePage(): void {
     const start = this.currentPage * this.pageSize;
@@ -100,14 +114,7 @@ export class DossiersListComponent implements OnInit {
   handlePageEvent(event: PageEvent): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
-
-    // Si nous utilisons des données réelles, rechargez à partir du serveur
-    if (this.error === null) {
-      this.loadDossiers();
-    } else {
-      // Sinon, utilisez les données locales
-      this.updatePage();
-    }
+    this.loadDossiers();
   }
 
   goToDetail(id: number): void {
@@ -120,13 +127,10 @@ export class DossiersListComponent implements OnInit {
 
   deleteDossier(id: number, event: Event): void {
     event.stopPropagation(); // Pour éviter la navigation vers la page détail
-
     if (confirm('Êtes-vous sûr de vouloir supprimer ce dossier ?')) {
       this.dossierService.deleteDossier(id).subscribe({
-        next: () => {
+        next: () => this.loadDossiers(),
           // Après suppression, recharger les données
-          this.loadDossiers();
-        },
         error: (err: any) => {
           console.error('Erreur lors de la suppression du dossier', err);
           alert('Erreur lors de la suppression du dossier');

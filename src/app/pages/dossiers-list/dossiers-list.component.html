@@ -7,78 +7,76 @@
   </div>
 
   <!-- Loading spinner -->
-  @if (loading) {
+  <ng-container *ngIf="loading">
     <div class="loading-container">
       <mat-spinner diameter="40"></mat-spinner>
       <p>Chargement des dossiers...</p>
     </div>
-  }
+  </ng-container>
 
   <!-- Error message -->
-  @if (error) {
+  <ng-container *ngIf="error">
     <div class="alert alert-danger">
       {{ error }}
       <button mat-button color="primary" (click)="loadDossiers()">Réessayer</button>
     </div>
-  }
+  </ng-container>
 
   <!-- Empty state -->
-  @if (!loading && pageDossiers.length === 0) {
+  <ng-container *ngIf="!loading && pageDossiers?.length === 0">
     <div class="empty-state">
       <mat-icon>folder_open</mat-icon>
       <h3>Aucun dossier trouvé</h3>
       <p>Commencez par créer un nouveau dossier</p>
     </div>
-  }
+  </ng-container>
 
   <!-- Dossiers list -->
-  @if (!loading && pageDossiers.length > 0) {
+  <ng-container *ngIf="!loading && pageDossiers.length > 0">
     <div class="dossiers-grid">
-      @for (dossier of pageDossiers; track dossier.id) {
-        <mat-card class="dossier-card" (click)="goToDetail(dossier.id)">
-          <mat-card-header>
-            <mat-card-title>
-              <span class="avatar">
-                  {{ dossier.nomPrenomStagiaire ? dossier.nomPrenomStagiaire[0] : '?' }}
-              </span>
-              {{ dossier.nomPrenomStagiaire || 'Stagiaire non défini' }}
-            </mat-card-title>
-            <mat-card-subtitle>
-              <span class="dossier-code">{{ dossier.codeDossier }}</span>
-              <span class="dossier-status"
-                    [style.background-color]="dossier.statutDossier.couleur || '#ccc'">
-                {{ dossier.statutDossier.nom }}
-              </span>
-            </mat-card-subtitle>
-          </mat-card-header>
+      <mat-card class="dossier-card" *ngFor="let dossier of pageDossiers" (click)="goToDetail(dossier.id)">
+        <mat-card-header>
+          <mat-card-title>
+            <span class="avatar">
+              {{ dossier.nomPrenomStagiaire ? dossier.nomPrenomStagiaire[0] : '?' }}
+            </span>
+            {{ dossier.nomPrenomStagiaire || 'Stagiaire non défini' }}
+          </mat-card-title>
+          <mat-card-subtitle>
+            <span class="dossier-code">{{ dossier.codeDossier }}</span>
+            <span class="dossier-status"
+                  [style.background-color]="getStatutColor(dossier.statutDossier)">
+              {{ dossier.statutDossier?.nomStatut }}
+            </span>
+          </mat-card-subtitle>
+        </mat-card-header>
 
-          <mat-card-content>
-            @if (dossier.titreFormation) {
-              <p>
-                <mat-icon>school</mat-icon> {{ dossier.titreFormation }}
-              </p>
-            }
+        <mat-card-content>
+          <ng-container *ngIf="dossier.titreFormation">
             <p>
-              <mat-icon>calendar_today</mat-icon>
-              Créé le {{ dossier.dateCreation | date:'dd/MM/yyyy' }}
+              <mat-icon>school</mat-icon> {{ dossier.titreFormation }}
             </p>
-          </mat-card-content>
+          </ng-container>
+          <p>
+            <mat-icon>calendar_today</mat-icon>
+            Créé le {{ dossier.dateCreation | date:'dd/MM/yyyy' }}
+          </p>
+        </mat-card-content>
 
-          <mat-card-actions>
-            <button mat-button (click)="editDossier(dossier.id); $event.stopPropagation()">
-              <mat-icon>edit</mat-icon> Modifier
-            </button>
-            <button mat-button color="warn" (click)="deleteDossier(dossier.id, $event)">
-              <mat-icon>delete</mat-icon> Supprimer
-            </button>
-          </mat-card-actions>
-        </mat-card>
-      }
+        <mat-card-actions>
+          <button mat-button (click)="editDossier(dossier.id); $event.stopPropagation()">
+            <mat-icon>edit</mat-icon> Modifier
+          </button>
+          <button mat-button color="warn" (click)="deleteDossier(dossier.id, $event)">
+            <mat-icon>delete</mat-icon> Supprimer
+          </button>
+        </mat-card-actions>
+      </mat-card>
     </div>
-  }
+  </ng-container>
 
   <!-- Pagination -->
-  @if (totalItems > 0) {
+  <ng-container *ngIf="totalItems > 0">
     <mat-paginator
       [length]="totalItems"
       [pageSize]="pageSize"
@@ -87,5 +85,5 @@
       (page)="handlePageEvent($event)"
       aria-label="Sélectionner une page">
     </mat-paginator>
-  }
+  </ng-container>
 </div>

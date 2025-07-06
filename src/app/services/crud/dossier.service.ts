@@ -25,10 +25,12 @@ export class DossierService {
   }
 
   // etc...
-  getDossiersPaginated(currentPage: number, pageSize: number) {
-    return this.http.get<Dossier[]>(`${this.apiUrl}?page=${currentPage}&size=${pageSize}`);
-
+  getDossiersPaginated(page: number, size: number) {
+    return this.http.get<{ dossiers: Dossier[], totalItems: number }>(
+      `http://localhost:8080/api/dossiers/paginated?page=${page}&size=${size}`
+    );
   }
+
 
   deleteDossier(id: number) {
     return this.http.delete(`${this.apiUrl}/${id}`);

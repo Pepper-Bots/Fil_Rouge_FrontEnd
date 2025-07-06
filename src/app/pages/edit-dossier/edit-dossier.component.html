@@ -2,87 +2,65 @@
   {{ dossierEdite ? "Modifier un dossier stagiaire" : "Créer un dossier stagiaire" }}
 </h3>
 
-<form [formGroup]="formulaire" (ngSubmit)="onAjoutDossier()">
+<form [formGroup]="formulaire" (ngSubmit)="onSubmit()">
 
-  <!-- Nom -->
+  <!-- Code dossier -->
   <mat-form-field>
-    <mat-label>Nom</mat-label>
-    <input matInput formControlName="lastName" placeholder="Ex. Dupont" />
-    @if (formulaire.get('nom')?.hasError('required')) {
-      <mat-error>Le nom est requis</mat-error>
-    }
+    <mat-label>Code dossier</mat-label>
+    <input matInput formControlName="codeDossier" placeholder="Ex. DOS1234" />
+    <mat-error *ngIf="formulaire.get('codeDossier')?.hasError('required')">
+      Le code dossier est requis
+    </mat-error>
+    <mat-error *ngIf="formulaire.get('codeDossier')?.hasError('minlength')">
+      Le code dossier doit comporter au moins 2 caractères
+    </mat-error>
+    <mat-error *ngIf="formulaire.get('codeDossier')?.hasError('maxlength')">
+      Le code dossier doit comporter au maximum 10 caractères
+    </mat-error>
   </mat-form-field>
 
-  <!-- Prénom -->
+  <!-- Statut du dossier -->
   <mat-form-field>
-    <mat-label>Prénom</mat-label>
-    <input matInput formControlName="firstName" placeholder="Ex. Marie" />
-    @if (formulaire.get('prenom')?.hasError('required')) {
-      <mat-error>Le prénom est requis</mat-error>
-    }
-  </mat-form-field>
-<!--  <mat-form-field>-->
-<!--    <mat-label>Nom du dossier</mat-label>-->
-<!--    &lt;!&ndash; Champ de saisie (input) lié au formulaire avec formControlName="name" &ndash;&gt;-->
-<!--    <input formControlName="nom" matInput placeholder="Ex. PC Asus 9874">-->
-
-<!--    &lt;!&ndash; Vérification des erreurs pour le champ "name" &ndash;&gt;-->
-<!--    @if (formulaire.get('nom')?.hasError('required')) {-->
-<!--      <mat-error>Le nom est requis</mat-error>-->
-<!--    } @else if (formulaire.get('nom')?.hasError('minlength')){-->
-<!--      <mat-error>Le nom doit comporter au moins 3 caractères</mat-error>-->
-<!--    } @else if (formulaire.get('nom')?.hasError('maxlenght')){-->
-<!--      <mat-error>Le nom doit comporter au maximum 20 caractères</mat-error>-->
-<!--    }-->
-<!--  </mat-form-field>-->
-
-  <mat-form-field>
-    <mat-label>Code article</mat-label>
-    <input formControlName="codeArticle" matInput placeholder="Ex. ASUS">
-    <mat-error>Le code est requis</mat-error>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Description</mat-label>
-    <textarea formControlName="description" matInput ></textarea>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Prix</mat-label>
-    <input formControlName="prix" matInput type="number">
-
-    @if (formulaire.get('prix')?.hasError('required')) {
-      <mat-error>Le prix est requis</mat-error>
-    } @else if (formulaire.get('prix')?.hasError('min')) {
-      <mat-error>Le prix doit être au minimum de 10 centimes</mat-error>
-    }
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Etat</mat-label>
-    <mat-select formControlName="etat" [compareWith]="compareId">
-      @for (etat of etats; track $index) {
-        <mat-option [value]="etat">{{ etat.nom }}</mat-option>
-      }
+    <mat-label>Statut du dossier</mat-label>
+    <mat-select formControlName="statutDossier" [compareWith]="compareId">
+      <mat-option *ngFor="let statut of statuts" [value]="statut">
+        {{ statut.nomStatut }}
+      </mat-option>
     </mat-select>
+    <mat-error *ngIf="formulaire.get('statutDossier')?.hasError('required')">
+      Le statut du dossier est requis
+    </mat-error>
   </mat-form-field>
 
+  <!-- Stagiaire -->
   <mat-form-field>
-    <mat-label>Etiquettes</mat-label>
-    <mat-select formControlName="etiquettes" multiple [compareWith]="compareId">
-      @for (etiquette of etiquettes; track $index) {
-        <mat-option [value]="etiquette">
-          {{etiquette.nom}}
-        </mat-option>
-      }
+    <mat-label>Stagiaire</mat-label>
+    <mat-select formControlName="stagiaire" [compareWith]="compareId">
+      <mat-option *ngFor="let stagiaire of stagiaires" [value]="stagiaire">
+        {{ stagiaire.lastName }} {{ stagiaire.firstName }}
+      </mat-option>
     </mat-select>
+    <mat-error *ngIf="formulaire.get('stagiaire')?.hasError('required')">
+      Le stagiaire est requis
+    </mat-error>
   </mat-form-field>
 
-  <button type="submit" mat-raised-button>
+  <!-- Formation -->
+  <mat-form-field>
+    <mat-label>Formation</mat-label>
+    <mat-select formControlName="formation" [compareWith]="compareId">
+      <mat-option *ngFor="let formation of formations" [value]="formation">
+        {{ formation.nom }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="formulaire.get('formation')?.hasError('required')">
+      La formation est requise
+    </mat-error>
+  </mat-form-field>
+
+  <button type="submit" mat-raised-button color="primary" [disabled]="formulaire.invalid">
     <mat-icon [fontIcon]="dossierEdite ? 'edit' : 'add'"></mat-icon>
     {{ dossierEdite ? "Editer le dossier" : "Ajouter le dossier" }}
   </button>
 
 </form>
-
-

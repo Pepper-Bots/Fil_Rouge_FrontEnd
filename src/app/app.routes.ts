@@ -9,6 +9,7 @@ import {DossierDetailComponent} from './pages/dossier-detail/dossier-detail.comp
 import { PreconnexionComponent } from './pages/auth/preconnexion/preconnexion.component';
 import {DashboardStagiaireComponent} from './pages/dashboard-stagiaire/dashboard-stagiaire.component';
 import {connecteGuard} from './services/connecte.guard';
+import {EditDossierComponent} from './pages/edit-dossier/edit-dossier.component';
 
 
 export const routes: Routes = [
@@ -25,6 +26,15 @@ export const routes: Routes = [
   { path: '**', component: Page404Component },
   { path: 'dossiers', component: DossiersListComponent },
   { path: 'dossier/:id', component: DossierDetailComponent },
+  {
+    path: 'dossiers/nouveau',
+    component: EditDossierComponent
+  },
+  {
+    path: 'dossiers/:id',
+    component: EditDossierComponent
+  }
+
   // { path: 'dossier-form/:id', component: DossierFormComponent },
 
 ];

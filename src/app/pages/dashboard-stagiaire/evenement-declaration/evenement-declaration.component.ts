@@ -1,9 +1,11 @@
 import {Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Evenement, MotifAbsence, DocumentEvenement} from '../../../models/evenement';
 import {EvenementService} from '../../../services/crud/evenement.service';
 import { CommonModule } from '@angular/common';
 import {AuthService} from '../../../services/auth.service';
+import {MotifAbsence} from '../../../models/motif-absence';
+import {DocumentEvenement} from '../../../models/document-evenement';
+import {Evenement} from '../../../models/evenement';
 
 @Component({
   selector: 'app-evenement-declaration',
@@ -17,6 +19,9 @@ import {AuthService} from '../../../services/auth.service';
 })
 export class EvenementDeclarationComponent implements OnInit {
 
+  submitted = false;
+  successMessage: string | null = null;
+  errorMessage: string | null = null;
   declarationForm: FormGroup;
   motifs: MotifAbsence[] = [];
   isLoading = false;
@@ -84,16 +89,20 @@ export class EvenementDeclarationComponent implements OnInit {
 
 
   onSubmit() {
+    this.submitted = true;
+    this.successMessage = null;
+    this.errorMessage = null;
+
   if (this.declarationForm.invalid) {
     this.markFormGroupTouched();
+    this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
     return;
   }
 
   this.isLoading = true;
   const formData = this.declarationForm.value;
-
   // Utiliser un ID fixe pour le mock
-  const stagiaireId = 1; // ← Temporaire
+  const stagiaireId = 1; // à remplacer par le vrai id !
 
     // Si un fichier est sélectionné, l'uploader d'abord
   if (this.selectedFile) {
@@ -101,6 +110,7 @@ export class EvenementDeclarationComponent implements OnInit {
       this.declareEventWithDocument (formData, stagiaireId, document.id!);
     }).catch(error => {
       console.error('Erreur upload:', error);
+      this.errorMessage = "Erreur lors de l'envoi du document.";
       this.isLoading = false;
     });
   } else {
@@ -154,16 +164,20 @@ export class EvenementDeclarationComponent implements OnInit {
     this.evenementService.creerEvenement(evenement).subscribe({
       next: (evenementCree) => {
         console.log('✅ Événement déclaré:', evenementCree);
+        this.successMessage = "Événement déclaré avec succès.";
         this.showSuccess = true;
         this.isLoading = false;
 
         setTimeout(() => {
           this.resetForm();
           this.showSuccess = false;
+          this.successMessage = null;
+          this.submitted = false;
         }, 3000);
       },
       error: (error) => {
         console.error('❌ Erreur déclaration:', error);
+        this.errorMessage = "Erreur lors de la déclaration.";
         this.isLoading = false;
       }
     });

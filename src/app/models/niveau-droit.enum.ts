@@ -1,0 +1,6 @@
+export enum NiveauDroit {
+  BASIQUE = 'BASIQUE',
+  MODERATEUR = 'MODERATEUR',
+  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN'
+}

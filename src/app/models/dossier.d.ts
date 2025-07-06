@@ -1,33 +1,29 @@
 // models/dossier.model.ts
+
+import { StatutDossier } from './statut-dossier';
+import { Document } from './document.model';
+import { Stagiaire } from './stagiaire.model';
+import { Formation } from './formation.model';
+import { Admin } from './admin.model';
+
 export interface Dossier {
   id: number;
-  dossier: string;
   codeDossier: string;
-  dateCreation: string;
-  lastUpdated?: string;
+  statutDossier: StatutDossier;
 
-  // Références aux objets liés
-  statutDossier: {
-    id: number;
-    nom: string;
-    couleur: string;
-    description?: string;
-  };
+  documents?: Document[]; // Optionnel: peut ne pas être chargé selon les vues
 
-  // Informations dérivées via JsonView
+  dateCreation: string; // ISO string (LocalDateTime côté back)
+  derniereMiseAJour?: string;
+  dateModification?: string;
+
+  stagiaire: Stagiaire;
+  formation: Formation;
+  createur: Admin;
+
+  // Champs calculés ou exposés via @JsonView
   nomPrenomStagiaire?: string;
   titreFormation?: string;
   nomCreateur?: string;
-
-  }
-
-  export interface EtatDossiers {
-  id: number;
-  nom: string;
-  couleur: string;
-  etat: string;
+  nomImage?: string;
 }
-
-
-
-

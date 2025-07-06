@@ -1,24 +1,23 @@
 import {Component, inject, OnInit} from '@angular/core';
-import {MatInputModule} from '@angular/material/input';
-import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule} from '@angular/material/icon';
 import {FormBuilder, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
-import {MatOption, MatSelect, MatSelectModule} from '@angular/material/select';
 import {ActivatedRoute} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {Dossier, EtatDossiers} from '../../models/dossier';
+import {Dossier} from '../../models/dossier';
+import {StatutDossier} from '../../models/statut-dossier';
+import {Stagiaire} from '../../models/stagiaire';
+import {Formation} from '../../models/formation';
+import {MatFormField, MatInput} from '@angular/material/input';
+import {MatButton} from '@angular/material/button';
+import {MatIcon} from '@angular/material/icon';
+import {MatOption} from '@angular/material/core';
+import {MatSelect} from '@angular/material/select';
+import {NgForOf, NgIf} from '@angular/common';
+import {MatFormFieldModule} from '@angular/material/form-field';
 
-// ReactiveFormsModule utilisé pour valider le formulaire
-
-interface EtatDossier {
-}
-
-// FormsModule bloque le formulaire pour ne pas recharger la page
 @Component({
   selector: 'app-edit-dossier',
-  imports: [MatInputModule, MatButtonModule, MatIconModule,
-    MatSelectModule, ReactiveFormsModule, FormsModule, MatSelect, MatOption],
+  imports: [ReactiveFormsModule, MatFormFieldModule, FormsModule, MatFormField, MatButton, MatIcon, MatOption, MatSelect, MatInput, NgIf, NgForOf],
   templateUrl: './edit-dossier.component.html',
   styleUrl: './edit-dossier.component.scss'
 })
@@ -27,81 +26,82 @@ export class EditDossierComponent implements OnInit {
   formBuilder = inject(FormBuilder);
   http = inject(HttpClient);
   activatedRoute = inject(ActivatedRoute);
+  notification = inject(MatSnackBar);
 
   formulaire = this.formBuilder.group({
-    nom: ['Nouveau dossier', [Validators.required, Validators.maxLength(20), Validators.minLength(3)]],
-    // codeArticle: ['777', [Validators.required]],
-    description: ['Une description', []],
-    // prix: [0.10, [Validators.required, Validators.min(0.1)]],
-    etat: [{id: 1}],
-    // etats: [[] as Etat[]],
+    codeDossier: ['', [Validators.required, Validators.maxLength(10), Validators.minLength(2)]],
+    statutDossier: [null as StatutDossier | null, Validators.required],
+    stagiaire: [null as Stagiaire | null, Validators.required],
+    formation: [null as Formation | null, Validators.required]
   });
 
-  // TODO - Voir attributs de Dossier dans le back -> comment c'était géré dans le back du cours ? classe état ?
-  etatDossiers: EtatDossiers[] = []
-  // etiquettes: Etiquette[] = [];
+  statuts: StatutDossier[] = [];
+  stagiaires: Stagiaire[] = [];
+  formations: Formation[] = [];
   dossierEdite: Dossier | null = null;
-  notification = inject(MatSnackBar);
-  private etats: EtatDossier[] | undefined;
+
+  statutColorMap: { [key: string]: string } = {
+    'Complet': '#28a745',
+    'En cours': '#ffc107',
+    'Incomplet': '#dc3545'
+  };
+
+  getStatutColor(statut: StatutDossier | undefined): string {
+    if (!statut) return '#ccc';
+    return this.statutColorMap[statut.nomStatut] || '#ccc';
+  }
 
 
   ngOnInit() {
+    // Récupération des listes pour les selects
+    this.http.get<StatutDossier[]>('http://localhost:8080/api/statuts-dossier').subscribe(res => this.statuts = res);
+    this.http.get<Stagiaire[]>('http://localhost:8080/api/stagiaires').subscribe(res => this.stagiaires = res);
+    this.http.get<Formation[]>('http://localhost:8080/api/formations').subscribe(res => this.formations = res);
 
-    this.activatedRoute.params
-      .subscribe(parametres => {
-
-        // Si c'est une édition
-        if (parametres['id']) {
-          this.http
-            .get<Dossier>('http://localhost:8080/dossier/' + parametres['id'])
-            .subscribe(dossier => {
-              this.formulaire.patchValue(dossier)
-              this.dossierEdite = dossier;
-            })
-        }
-      })
-
-    this.http
-      .get<EtatDossier[]>(`http://localhost:8080/etats`)
-      .subscribe(etats => this.etats = etats)
-
-    // this.http
-    //   .get<Etiquette[]>(`http://localhost:8080/etiquettes`)
-    //   .subscribe(etiquettes => this.etiquettes = etiquettes)
-
+    this.activatedRoute.params.subscribe(params => {
+      if (params['id']) {
+        this.http.get<Dossier>('http://localhost:8080/api/dossiers/dossier/' + params['id'])
+          .subscribe(dossier => {
+            this.formulaire.patchValue({
+              codeDossier: dossier.codeDossier,
+              statutDossier: dossier.statutDossier,
+              stagiaire: dossier.stagiaire,
+              formation: dossier.formation
+            });
+            this.dossierEdite = dossier;
+          });
+      }
+    });
   }
 
-
-  onAjoutProduct() {
-
+  onSubmit() {
     if (this.formulaire.valid) {
-      // console.log(this.formulaire.value);
+      const data = this.formulaire.value;
 
-      // Pour éditer produit
+      // DTO back : on ne transmet que l'id pour stagiaire et formation
+      const dto = {
+        ...data,
+        stagiaire: { id: data.stagiaire?.id },
+        formation: { id: data.formation?.id }
+      };
+
       if (this.dossierEdite) {
-
-        // TODO notification 'dossier modifié' ne s'affiche pas -> A corriger
         this.http
-          .put('http://localhost:8080/product' + this.dossierEdite.id, this.formulaire.value) // TODO chercher différence méthode post & put -> laquelle mieux ici ?
-          .subscribe(resultat => {
-            this.notification.open("Le dossier a bien été modifié", "", {duration : 5000, verticalPosition: "top"})
-          })
-
+          .put(`http://localhost:8080/api/dossiers/dossier/${this.dossierEdite.id}`, dto)
+          .subscribe(() => {
+            this.notification.open("Le dossier a bien été modifié", "", {duration : 5000, verticalPosition: "top"});
+          });
       } else {
-
         this.http
-          .post('http://localhost:8080/dossier', this.formulaire.value)
-          .subscribe(resultat => {
-            this.notification.open("Le dossier a bien été ajouté", "", {duration : 5000, verticalPosition: "top"})
-          })
+          .post('http://localhost:8080/api/dossiers/admin', dto)
+          .subscribe(() => {
+            this.notification.open("Le dossier a bien été ajouté", "", {duration : 5000, verticalPosition: "top"});
+          });
       }
     }
-
   }
 
-  compareId(o1: {id: number}, o2: {id: number}) {
-
-    return o1.id === o2.id;
+  compareId(o1: {id: number} | null, o2: {id: number} | null) {
+    return o1 && o2 ? o1.id === o2.id : o1 === o2;
   }
-
 }

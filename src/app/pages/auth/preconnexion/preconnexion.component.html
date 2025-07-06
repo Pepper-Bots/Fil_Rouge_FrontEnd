@@ -1,14 +1,54 @@
+<!-- preconnexion.component.html -->
 <div class="preconnexion-container">
-  <h1>Bienvenue sur NovaTech Academy</h1>
-  <p class="subtitle">Portail d’accès à la plateforme</p>
-  <div class="actions">
-    <button [routerLink]="['/connexion']" [queryParams]="{ type: 'stagiaire' }">Connexion Stagiaire</button>
-    <button [routerLink]="['/connexion']" [queryParams]="{ type: 'admin' }">Connexion Admin</button>
 
-    <!-- Tu peux adapter les routes ou afficher un message selon le rôle -->
-  </div>
-  <div class="info">
-    <p>Contactez l’administration pour obtenir vos identifiants.</p>
-    <p>Besoin d’aide? <a href="mailto:support@novatech.academy">Contact support</a></p>
-  </div>
+  <!-- Header avec bandeau et photo de fond -->
+  <header class="header-banner">
+    <div class="banner-overlay"></div>
+    <div class="banner-content">
+      <div class="logo">
+        <!-- Option 1: Logo image (recommandé) -->
+        <img src="./assets/images/logo-novatech.png" alt="NovaTech Academy" class="logo-img">
+
+        <!-- Option 2: Logo texte (si pas d'image disponible) -->
+        <!-- <span class="logo-text">NOVATECH ACADEMY</span> -->
+      </div>
+      <h1 class="welcome-title">Bienvenue dans votre appli de gestion</h1>
+    </div>
+  </header>
+
+  <!-- Contenu principal -->
+  <main class="main-content">
+    <div class="welcome-section">
+
+      <!-- Section Stagiaire -->
+      <div class="connection-section stagiaire-section">
+        <h2 class="section-title">Stagiaire</h2>
+        <div class="section-content">
+          <ul class="info-list">
+            <li>1ère connexion - Veuillez modifier le mot de passe fournis par l'administration lors de votre 1ère connexion</li>
+            <li>Rappelez-vous de modifier votre mot de passe tous les 3 mois.</li>
+          </ul>
+          <p class="contact-info">
+            En cas de difficultés pour vous connecter, veuillez contacter l'administration au 03.00.00.00.00
+          </p>
+          <button class="connect-btn" (click)="navigateToConnexion('stagiaire')">
+            Se connecter
+          </button>
+        </div>
+      </div>
+
+      <!-- Section Administration -->
+      <div class="connection-section admin-section">
+        <h2 class="section-title">Administration</h2>
+        <div class="section-content">
+          <ul class="info-list">
+            <li>Votre mot de passe est à modifier tous les 3 mois.</li>
+          </ul>
+          <button class="connect-btn" (click)="navigateToConnexion('admin')">
+            Se connecter
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
