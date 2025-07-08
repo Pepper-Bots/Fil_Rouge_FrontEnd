@@ -7,5 +7,12 @@ import { Component } from '@angular/core';
   styleUrl: './dashboard-admin.component.scss'
 })
 export class DashboardAdminComponent {
+  nbStagiaires: string | undefined;
+  loading: any;
+  nbFormations: string | undefined;
+  nbIntervenants: string | undefined;
+  inscriptionsEnAttente: any;
+  nbDocsAttente: string | undefined;
+  docsAttente: any;
 
 }

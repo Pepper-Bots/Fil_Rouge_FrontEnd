@@ -1,4 +1,5 @@
 // montrer les vraies valeurs des variables d'environnement
+// pour le développement (peut être identique ou différent)
 
 export const environment = {
   production: false,

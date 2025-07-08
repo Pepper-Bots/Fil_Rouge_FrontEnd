@@ -5,40 +5,13 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {environment} from '../../environments/environment';
 
-// Interfaces correspondant à votre backend Spring Boot
-interface BaseUser {
-  id: number;
-  email: string;
-  nom: string;
-  prenom: string;
-  dateCreation: string;
-  premiereConnexion: boolean;
-  actif: boolean;
-}
-
-interface Admin extends BaseUser {
-  role: 'ADMIN' | 'SUPER_ADMIN';
-  departement?: string;
-  permissions?: string[];
-}
-
-interface Stagiaire extends BaseUser {
-  role: 'STAGIAIRE';
-  dateNaissance?: string;
-  telephone?: string;
-  adresse?: string;
-  niveauEtudes?: string;
-  formations?: number[];
-}
-
-type User = Admin | Stagiaire;
+// Import des modèles existants
+import { User } from '../models';
+import { Admin, TypeAdmin, NiveauDroit } from '../models';
+import { Stagiaire } from '../models';
+import { Ville } from '../models/ville';
 
 interface JwtPayload {
-  adresse: string;
-  phone: string;
-  dateNaissance: string;
-  departement: string;
-  permissions: any[];
   id: number;
   email: string;
   role: 'ADMIN' | 'SUPER_ADMIN' | 'STAGIAIRE';
@@ -46,23 +19,31 @@ interface JwtPayload {
   firstName: string;
   premiereConnexion: boolean;
   exp: number;
+
+  // Propriétés spécifiques aux stagiaires
+  adresse?: string;
+  phone?: string;
+  dateNaissance?: string;
+
+  // Propriétés spécifiques aux admins
+  departement?: string;
+  typeAdmin?: string;
+  niveauDroit?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class AuthService {
 
   private tokenKey = 'jwt';
-  private apiUrl = environment.serverUrl + 'api/auth'; // adapter si besoin
+  private apiUrl = environment.serverUrl + 'api/auth';
   private premiereConnexionSubject = new BehaviorSubject<boolean>(false);
 
   connecte = false;
   role: string | null = null;
 
   constructor(
-
     private http: HttpClient,
     private router: Router
   ) {
@@ -173,15 +154,13 @@ export class AuthService {
 
   /**
    * Observable première connexion
-   * Permet aux guards ou aux composants de souscrire à premièreConnexion
    */
   premiereConnexion$: Observable<boolean> = this.premiereConnexionSubject.asObservable();
 
   /**
-   * Récupère les informations de l'utilisateur depuis le JWT avec typage fort
-   * @returns User | null - Les infos utilisateur typées selon le rôle
+   * Récupère les informations de l'utilisateur depuis le JWT
    */
-  getUser(): User | null {
+  getUser(): User | Admin | Stagiaire | null {
     const token = this.getToken();
     if (!token) {
       return null;
@@ -190,17 +169,15 @@ export class AuthService {
     try {
       const payload = jwtDecode<JwtPayload>(token);
 
-      // Construction de l'objet utilisateur selon le rôle
-      const baseUser: BaseUser = {
+      // Objet User de base selon votre modèle
+      const baseUser: User = {
         id: payload.id,
+        enabled: true, // ou depuis le payload si disponible
+        lastName: payload.lastName,
+        firstName: payload.firstName,
         email: payload.email,
-        nom: payload.lastName,
-        prenom: payload.firstName,
-        dateCreation: new Date().toISOString(), // ou depuis le payload si disponible
-        premiereConnexion: payload.premiereConnexion,
-        actif: true // ou depuis le payload si disponible
+        nomRole: payload.role
       };
-
 
       // Retour typé selon le rôle
       switch (payload.role) {
@@ -208,24 +185,23 @@ export class AuthService {
         case 'SUPER_ADMIN':
           return {
             ...baseUser,
-            role: payload.role,
-            departement: payload.departement,
-            permissions: payload.permissions || []
+            typeAdmin: TypeAdmin.RESPONSABLE_ETABLISSEMENT, // Valeur par défaut ou depuis payload
+            niveauDroit: payload.role === 'SUPER_ADMIN' ? NiveauDroit.SUPER_ADMIN : NiveauDroit.ADMIN
           } as Admin;
 
         case 'STAGIAIRE':
           return {
             ...baseUser,
-            role: payload.role,
-            dateNaissance: payload.dateNaissance,
-            telephone: payload.phone,
-            adresse: payload.adresse,
-            formations: [] // À récupérer via une autre API si nécessaire
+            premiereConnexion: payload.premiereConnexion,
+            dateNaissance: payload.dateNaissance || '',
+            phoneNumber: payload.phone || '',
+            adresse: payload.adresse || '',
+            ville: {} as Ville // Objet vide ou depuis une autre source
           } as Stagiaire;
 
         default:
           console.warn('Rôle utilisateur non reconnu:', payload.role);
-          return null;
+          return baseUser;
       }
 
     } catch (error) {
@@ -236,29 +212,26 @@ export class AuthService {
 
   /**
    * Vérifie si l'utilisateur connecté est un Admin
-   * @returns boolean
    */
   isAdmin(): boolean {
-    const user = this.getUser();
-    return user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+    const role = this.getRole();
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
   }
 
   /**
    * Vérifie si l'utilisateur connecté est un Super Admin
-   * @returns boolean
    */
   isSuperAdmin(): boolean {
-    const user = this.getUser();
-    return user?.role === 'SUPER_ADMIN';
+    const role = this.getRole();
+    return role === 'SUPER_ADMIN';
   }
 
   /**
    * Vérifie si l'utilisateur connecté est un Stagiaire
-   * @returns boolean
    */
   isStagiaire(): boolean {
-    const user = this.getUser();
-    return user?.role === 'STAGIAIRE';
+    const role = this.getRole();
+    return role === 'STAGIAIRE';
   }
 
   /**
@@ -266,81 +239,30 @@ export class AuthService {
    */
   getUserId(): number | null {
     const user = this.getUser();
-    return user ? user.id : null;
+    return user && 'id' in user ? user.id : null;
   }
 
   /**
    * Récupère l'email de l'utilisateur connecté
-   * @returns string | null
    */
   getUserEmail(): string | null {
     const user = this.getUser();
-    return user ? user.email : null;
+    return user && 'email' in user ? user.email : null;
   }
-
-  // /**
-  //  * Récupère l'utilisateur typé comme Admin (avec vérification)
-  //  * @returns Admin | null
-  //  */
-  // getAdmin(): Admin | null {
-  //   const user = this.getUser();
-  //   return this.isAdmin() ? user as Admin : null;
-  // }
-  //
-  // /**
-  //  * Récupère l'utilisateur typé comme Stagiaire (avec vérification)
-  //  * @returns Stagiaire | null
-  //  */
-  // getStagiaire(): Stagiaire | null {
-  //   const user = this.getUser();
-  //   return this.isStagiaire() ? user as Stagiaire : null;
-  // }
-  //
-  // /**
-  //  * Récupère le nom complet de l'utilisateur
-  //  * @returns string | null
-  //  */
-  // getUserDisplayName(): string | null {
-  //   const user = this.getUser();
-  //   if (!user) return null;
-  //
-  //   return `${user.prenom} ${user.nom}`;
-  // }
-  //
-  // /**
-  //  * Récupère les permissions de l'admin connecté
-  //  * @returns string[] | null
-  //  */
-  // getUserPermissions(): string[] | null {
-  //   const admin = this.getAdmin();
-  //   return admin?.permissions || null;
-  // }
-  //
-  // /**
-  //  * Vérifie si l'utilisateur a une permission spécifique
-  //  * @param permission - La permission à vérifier
-  //  * @returns boolean
-  //  */
-  // hasPermission(permission: string): boolean {
-  //   const permissions = this.getUserPermissions();
-  //   return permissions?.includes(permission) || false;
-  // }
-  //
 
   /**
    * Mock login pour développement
    */
   private mockLogin(email: string, password: string): Observable<any> {
-
-    // Identifiants de test - accepte n'importe quel email/password
+    // Gardez votre logique actuelle qui fonctionne
     const mockPayload = {
       id: 1,
       email: email,
-      role: 'ADMIN', // ou 'SUPER_ADMIN' ou 'STAGIAIRE'
+      role: 'ADMIN', // ou changez selon vos tests
       lastName: 'Test',
       firstName: 'Utilisateur',
       premiereConnexion: false,
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // expire dans 24h
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
       adresse: '123 Rue Test',
       phone: '0123456789',
       dateNaissance: '1990-01-01',
@@ -353,20 +275,16 @@ export class AuthService {
     const payload = btoa(JSON.stringify(mockPayload));
     const mockJWT = `${header}.${payload}.fake-signature`;
 
-
-    // Simulation d'une réponse après 1 seconde
+    // Simulation d'une réponse
     return new Observable(observer => {
       setTimeout(() => {
         this.decodeJwt(mockJWT);
         observer.next({
           token: mockJWT,
           success: true
-          });
-          observer.complete();
-          }, 1000);
-      });
-    }
+        });
+        observer.complete();
+      }, 1000);
+    });
+  }
 }
-
-//  service métier pour la logique d’authentification, gestion du token, login, logout, etc
-// AuthService sera injecté dans connection et dans app pour les faire communiquer

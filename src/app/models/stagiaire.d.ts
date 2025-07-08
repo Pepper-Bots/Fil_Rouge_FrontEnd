@@ -7,7 +7,7 @@ import { Document } from './document.model';
 import { Dossier } from './dossier.model';
 import { Inscription } from './inscription.model';
 
-export interface Stagiaire extends User {
+declare interface Stagiaire extends User {
   premiereConnexion: boolean;
   dateNaissance: string; // format ISO yyyy-MM-dd
   phoneNumber: string;
