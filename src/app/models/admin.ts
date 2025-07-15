@@ -1,6 +1,7 @@
 // models/admin.model.ts
 
-import { User } from './user.model';
+
+import {User} from './user';
 
 declare enum TypeAdmin {
   RESPONSABLE_ETABLISSEMENT = "RESPONSABLE_ETABLISSEMENT",
@@ -16,7 +17,7 @@ declare enum NiveauDroit {
   SUPER_ADMIN = "SUPER_ADMIN"
 }
 
-declare interface Admin extends User {
+export interface Admin extends User {
   typeAdmin: TypeAdmin;
   niveauDroit: NiveauDroit;
 }

@@ -6,10 +6,12 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import {environment} from '../../environments/environment';
 
 // Import des modèles existants
-import { User } from '../models';
-import { Admin, TypeAdmin, NiveauDroit } from '../models';
-import { Stagiaire } from '../models';
 import { Ville } from '../models/ville';
+import {NiveauDroit} from '../models/niveau-droit.enum';
+import {TypeAdmin} from '../models/type-admin.enum';
+import {Stagiaire} from '../models/stagiaire';
+import {Admin} from '../models/admin';
+import {User} from '../models/user';
 
 interface JwtPayload {
   id: number;

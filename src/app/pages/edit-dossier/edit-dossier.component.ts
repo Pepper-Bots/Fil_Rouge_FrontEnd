@@ -5,7 +5,6 @@ import {ActivatedRoute} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {Dossier} from '../../models/dossier';
 import {StatutDossier} from '../../models/statut-dossier';
-import {Stagiaire} from '../../models/stagiaire';
 import {Formation} from '../../models/formation';
 import {MatFormField, MatInput} from '@angular/material/input';
 import {MatButton} from '@angular/material/button';
@@ -14,6 +13,7 @@ import {MatOption} from '@angular/material/core';
 import {MatSelect} from '@angular/material/select';
 import {NgForOf, NgIf} from '@angular/common';
 import {MatFormFieldModule} from '@angular/material/form-field';
+import {Stagiaire} from '../../models/stagiaire';
 
 @Component({
   selector: 'app-edit-dossier',

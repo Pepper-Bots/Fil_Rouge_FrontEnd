@@ -1,13 +1,13 @@
-// models/stagiaire.model.ts
+// models/stagiaire.ts
 
 import {User} from './user';
-import { Ville } from './ville.model';
-import { Evenement } from './evenement.model';
-import { Document } from './document.model';
-import { Dossier } from './dossier.model';
-import { Inscription } from './inscription.model';
+import {Ville} from './ville';
+import {Evenement} from './evenement';
+import {Dossier} from './dossier';
+import {Inscription} from './inscription';
 
-declare interface Stagiaire extends User {
+
+export interface Stagiaire extends User {
   premiereConnexion: boolean;
   dateNaissance: string; // format ISO yyyy-MM-dd
   phoneNumber: string;
@@ -21,3 +21,4 @@ declare interface Stagiaire extends User {
   photoProfil?: string;
   statutActuelInscription?: string; // ou StatutInscription (enum) si exposé côté back
 }
+
