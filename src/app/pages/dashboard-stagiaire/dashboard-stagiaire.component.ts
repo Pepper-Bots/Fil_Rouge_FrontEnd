@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation} from '@angular/core';
 import {EvenementDeclarationComponent} from './evenement-declaration/evenement-declaration.component';
-import { CommonModule } from '@angular/common';
-import { ViewEncapsulation } from '@angular/core';
+import {CommonModule} from '@angular/common';
 
 
 @Component({
@@ -15,10 +14,10 @@ import { ViewEncapsulation } from '@angular/core';
   styleUrls: ['./dashboard-stagiaire.component.scss']
 })
 export class DashboardStagiaireComponent {
-
   isPanelOpen = false;
 
   togglePanel() {
+    // Gestion de l'affichage des panneaux latéraux
     this.isPanelOpen = !this.isPanelOpen;
   }
 

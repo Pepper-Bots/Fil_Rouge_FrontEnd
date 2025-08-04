@@ -7,12 +7,15 @@ import { Component } from '@angular/core';
   styleUrl: './dashboard-admin.component.scss'
 })
 export class DashboardAdminComponent {
+
+  // Statistiques à afficher
   nbStagiaires: string | undefined;
-  loading: any;
   nbFormations: string | undefined;
   nbIntervenants: string | undefined;
   inscriptionsEnAttente: any;
   nbDocsAttente: string | undefined;
   docsAttente: any;
+  loading: boolean = false;
 
+  // Méthodes de chargement des données à implémenter
 }

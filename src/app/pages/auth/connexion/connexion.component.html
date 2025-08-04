@@ -24,28 +24,18 @@
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <div class="form-group">
           <label class="form-label" for="email">Identifiant ou adresse email</label>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-input"
-            placeholder="Votre identifiant"
-            autocomplete="username">
+          <input type="email" id="email" formControlName="email" class="form-input"
+                 placeholder="Votre identifiant" autocomplete="username">
         </div>
 
         <div class="form-group">
           <label class="form-label" for="password">Votre mot de passe</label>
           <div class="password-wrapper">
-            <input
-              [type]="showPassword ? 'text' : 'password'"
-              id="password"
-              formControlName="password"
-              class="form-input"
+            <input [type]="showPassword ? 'text' : 'password'" id="password"
+              formControlName="password" class="form-input"
               placeholder="••••••••">
             <button
-              type="button"
-              class="password-toggle"
-              (click)="showPassword = !showPassword">
+              type="button" class="password-toggle" (click)="showPassword = !showPassword">
               {{ showPassword ? 'Hide' : 'Show' }}
             </button>
           </div>
@@ -55,10 +45,7 @@
           <a routerLink="/mot-de-passe-oublie">Mot de passe oublié?</a>
         </div>
 
-        <button
-          type="submit"
-          class="login-button"
-          [disabled]="loginForm.invalid">
+        <button type="submit" class="login-button" [disabled]="loginForm.invalid">
           Se connecter
         </button>
       </form>

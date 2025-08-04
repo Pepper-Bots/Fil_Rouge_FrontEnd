@@ -20,28 +20,33 @@ import {jwtDecode} from 'jwt-decode';
     ],
 })
 export class ConnexionComponent {
-   fb = inject(FormBuilder);
-   http = inject(HttpClient);
-   // notification = inject(NotificationService);
-   router = inject(Router);
+
+  // Injections modernes avec inject() API
+  fb = inject(FormBuilder);
+  http = inject(HttpClient);
+  router = inject(Router);
   auth = inject(AuthService);
   route = inject(ActivatedRoute);
 
-
+  // Formulaire réactif avec validation
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
 
+  // Gestion des erreurs avec Angular Signals
   error = signal<string | null>(null);
+  connexionType = 'stagiaire'; // valeur par défaut - Interface adaptative
+
+  // Propriétés fonctionnelles - Popup cht de mdp + affichage
   popupVisible = false;
   popupEmail = '';
   showPassword = false;
-  connexionType = 'stagiaire'; // valeur par défaut
 
 
   constructor() {
     // Met à jour connexionType à chaque changement de query param dans l'URL
+    // Adaptation de l'interface selon le type d'utilisateur
     this.route.queryParamMap.subscribe(params => {
       this.connexionType = params.get('type') ?? 'stagiaire';
     });
@@ -51,63 +56,54 @@ export class ConnexionComponent {
   onSubmit() {
     if (this.loginForm.invalid) return;
 
-    const { email, password } = this.loginForm.value;
-
-    console.log(this.loginForm.value) // debug
-    console.log("Email envoyé :", email);
+    const {email, password} = this.loginForm.value;
 
     this.auth.login(email!, password!).subscribe({
       next: (res) => {
-        console.log('Token JWT:', res.token);
-        const payload = jwtDecode<any>(res.token);
-        console.log('Payload JWT:', payload);
 
-        // Ici res doit contenir { token: "...", ... }
-        // 💡 Stocker et décoder le JWT
+        // Décodage et stockage du JWT
         this.auth.decodeJwt(res.token);
-
         const role = this.auth.getRole();
-        console.log('Rôle extrait du JWT:', role);
 
-        // 🎯 Si c'est une première connexion, redirige vers /changer-mdp
+        // Gestion de la première connexion
         if (res.premiereConnexion) {
           console.log('Première connexion -> redirection');
           this.router.navigate(['/changer-mdp']);
         } else {
-          // 🟢 Redirection robuste selon le rôle
-          const roleNorm = role?.toUpperCase() ?? '';
-
-          // if (res.premiereConnexion || this.auth.premiereConnexion) {
-          //   this.popupEmail = email || '';
-          //   this.popupVisible = true;
-
-
-          if (roleNorm.includes('ADMIN')) {
-            console.log('Redirection dashboard admin');
-            console.log('role en localStorage:', localStorage.getItem('role'));
-            this.router.navigate(['/dashboard-admin']);
-          } else if (roleNorm.includes('STAGIAIRE')) {
-            console.log('Redirection dashboard stagiaire');
-            this.router.navigate(['/dashboard-stagiaire']);
-          } else {
-            console.log('Redirection accueil');
-            this.router.navigate(['/accueil']);
-          }
+          // Redirection intelligente selon le rôle
+          this.redirectBasedOnRole(role);
         }
       },
-
       error: (err: any) => {
-        // 🔴 Ici on gère les messages venant du back
-        if (err.status === 401) {
-          this.error.set("Identifiant ou mot de passe incorrect.");
-        } else if (err.status === 403) {
-          this.error.set(err.error?.message || "Votre compte n'est pas activé.");
-        } else {
-          this.error.set("Erreur lors de la connexion. Veuillez réessayer plus tard.");
-        }
+        // Gestion fine des erreurs HTTP
+        this.handleLoginError(err);
       }
     });
   }
+
+  private redirectBasedOnRole(role: string | null) {
+    const roleNorm = role?.toUpperCase() ?? '';
+
+          if (roleNorm.includes('ADMIN')) {
+
+            this.router.navigate(['/dashboard-admin']);
+          } else if (roleNorm.includes('STAGIAIRE')) {
+            this.router.navigate(['/dashboard-stagiaire']);
+          } else {
+            this.router.navigate(['/accueil']);
+          }
+        }
+
+    private handleLoginError(err: any) {
+      if (err.status === 401) {
+        this.error.set("Identifiant ou mot de passe incorrect.");
+      } else if (err.status === 403) {
+        this.error.set("Votre compte n'est pas activé.");
+      } else {
+        this.error.set("Erreur lors de la connexion. " +
+          "Veuillez réessayer plus tard ou contacter un administrateur.");
+      }
+    }
 
   onClosePopup() {
     this.popupVisible = false;
