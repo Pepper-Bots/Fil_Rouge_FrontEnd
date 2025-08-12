@@ -106,9 +106,9 @@
         <mat-card-title>
           <mat-icon>person_add</mat-icon>
           Inscriptions en attente
-          <mat-chip-list>
+          <mat-chip-set>
             <mat-chip color="warn" selected>{{ inscriptionsAttente.length }}</mat-chip>
-          </mat-chip-list>
+          </mat-chip-set>
         </mat-card-title>
         <mat-card-subtitle>Dossiers nécessitant votre attention</mat-card-subtitle>
       </mat-card-header>
@@ -146,14 +146,14 @@
                   </div>
 
                   <div class="documents-manquants" *ngIf="inscription.documentsManquants.length > 0">
-                    <mat-chip-list>
+                    <mat-chip-set>
                       <mat-chip
                         *ngFor="let doc of inscription.documentsManquants"
                         color="warn"
                         class="doc-manquant">
                         {{ doc }}
                       </mat-chip>
-                    </mat-chip-list>
+                    </mat-chip-set>
                   </div>
                 </div>
 
@@ -194,9 +194,9 @@
         <mat-card-title>
           <mat-icon>description</mat-icon>
           Documents à vérifier
-          <mat-chip-list>
+          <mat-chip-set>
             <mat-chip color="accent" selected>{{ documentsAttente.length }}</mat-chip>
-          </mat-chip-list>
+          </mat-chip-set>
         </mat-card-title>
         <mat-card-subtitle>Validation des documents déposés</mat-card-subtitle>
       </mat-card-header>

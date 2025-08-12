@@ -11,48 +11,36 @@ import {interval, Subscription} from 'rxjs';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatDialog} from '@angular/material/dialog';
 import {HttpClient} from '@angular/common/http';
-import {MatChip} from '@angular/material/chips';
+import {MatChip, MatChipSet} from '@angular/material/chips';
 import {MatList, MatListItem} from '@angular/material/list';
+import {MatTooltip} from '@angular/material/tooltip';
+
 import {
   DashboardService,
   DocumentValidationRequest,
-  InscriptionAttente
+  InscriptionAttente,
+  DocumentAttente,
+  KpiData
 } from '../../services/crud/dashboard-admin.service';
-import {DocumentValidationComponent} from '../document-validation/document-validation.component';
 
-interface KpiData {
-  nbStagiaires: number;
-  nbFormations: number;
-  nbIntervenants: number;
-  nbDocsAttente: number;
-  nbDocsValidation: number;
-  nbInscriptionsAttente: number;
-}
-
-interface KpiInscriptionAttente {
-  id: number;
-  nomStagiaire: string;
-  prenomStagiaire: string;
-  nomFormation: string;
-  statutDossier: string;
-  dateInscription: Date;
-  documentsManquants: string[];
-}
-
-interface DocumentAttente {
-  id: number;
-  nomFichier: string;
-  typeFichier: string;
-  nomStagiaire: string;
-  prenomStagiaire: string;
-  dateDepot: Date;
-  statut: 'EN_ATTENTE' | 'EN_COURS' | 'VALIDE' | 'REJETE';
-  taille: number;
-}
 
 @Component({
   selector: 'app-dashboard-admin',
-  imports: [CommonModule, RouterModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatProgressSpinnerModule, MatChip, MatListItem, MatList],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatChip,
+    MatChipSet,
+    MatListItem,
+    MatList,
+    MatTooltip
+  ],
   templateUrl: './dashboard-admin.component.html',
   styleUrl: './dashboard-admin.component.scss'
 })
@@ -69,8 +57,8 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   };
 
   // Lists Data
-  inscriptionsAttente: InscriptionAttente[] = [];
-  documentsAttente: DocumentAttente[] = [];
+  InscriptionsAttente: InscriptionAttente[] = [];
+  DocumentsAttente: DocumentAttente[] = [];
 
   // Loading states
   isLoadingKpis = true;
@@ -90,181 +78,234 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
     private dashboardService: DashboardService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-  ) {}
+  ) {
+  }
+
+  // ===== LIFECYCLE HOOKS =====
 
   ngOnInit(): void {
-    this.chargerDonneesInitiales();
+    this.initialiserDashboard();
     this.demarrerRafraishissementAutomatique();
   }
 
   ngOnDestroy(): void {
     // Cleanup subscriptions
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.forEach(sub => sub?.unsubscribe());
     if (this.refreshInterval) {
       this.refreshInterval.unsubscribe();
     }
   }
 
+  // ===== MÉTHODES PRIVÉES D'INITIALISATION =====
+
   /**
    * Charge toutes les données initiales du dashboard
    */
-  private chargerDonneesInitiales(): void {
-    this.chargerKpis();
-    this.chargerInscriptionsAttente();
-    this.chargerDocumentsAttente();
+  private initialiserDashboard(): void {
+    this.recupererStats();
+    this.chargerDemandesEnAttente();
+    this.recupererDocumentsAVerifier();
   }
 
   /**
    * Charge les KPIs depuis l'API
    */
-  private chargerKpis(): void {
+  private recupererStats(): void {
     this.isLoadingKpis = true;
 
-    const kpisSubscription = this.dashboardService.getKpis()
-    .subscribe({
-      next: (data) => {
-        this.kpiData = data;
-        this.isLoadingKpis = false;
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des KPIs:', error);
-        this.gererErreur('Impossible de charger les indicateurs');
-        this.isLoadingKpis = false;
-      }
-    });
-    this.subscriptions.push(kpisSubscription);
+    const statsSubscription = this.dashboardService.getKpis()
+      .subscribe({
+        next: (data: KpiData) => {
+          this.kpiData = data;
+          this.isLoadingKpis = false;
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du chargement des statistiques:', error);
+          this.gererErreur('Impossible de charger les indicateurs');
+          this.isLoadingKpis = false;
+        }
+      });
+    this.subscriptions.push(statsSubscription);
   }
 
   /**
    * Charge la liste des inscriptions en attente
    */
-  private chargerInscriptionsAttente(): void {
+  private chargerDemandesEnAttente(): void {
     this.isLoadingInscriptions = true;
 
-    const inscriptionsSubscription = this.dashboardService.getInscriptionsAttente()
-    .subscribe({
-      next: (data) => {
-        this.inscriptionsAttente = data;
-        this.isLoadingInscriptions = false;
-      },
-      error: (error) => {
-        console.error('Erreur lors du chargement des inscriptions en attente:', error);
-        this.gererErreur('Impossible de charger les inscriptions en attente:');
-        this.isLoadingInscriptions = false;
-      }
-    });
-    this.subscriptions.push(inscriptionsSubscription);
+    const demandesSubscription = this.dashboardService.getInscriptionsAttente()
+      .subscribe({
+        next: (data: InscriptionAttente[]) => {
+          this.InscriptionsAttente = data.sort((a, b) =>
+            new Date(a.dateInscription).getTime() - new Date(b.dateInscription).getTime()
+          );
+          this.isLoadingInscriptions = false;
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du chargement des inscriptions en attente:', error);
+          this.gererErreur('Impossible de charger les inscriptions en attente:');
+          this.isLoadingInscriptions = false;
+        }
+      });
+    this.subscriptions.push(demandesSubscription);
   }
 
   /**
    * Charge la liste des documents en attente de validation
    */
-  private chargerDocumentsAttente(): void {
+  private recupererDocumentsAVerifier(): void {
     this.isLoadingDocuments = true;
 
-    const documentsSubscription = this.dashboardService.getDocumentsAttente()
+    const docsSubscription = this.dashboardService.getDocumentsAttente()
       .subscribe({
-        next: (data) => {
-          this.documentsAttente = data;
+        next: (data: DocumentAttente[]) => {
+          this.DocumentsAttente = data.sort((a, b) =>
+            new Date(a.dateDepot).getTime() - new Date(b.dateDepot).getTime()
+          );
           this.isLoadingDocuments = false;
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Erreur lors du chargement des documents:', error);
           this.gererErreur('Impossible de charger les documents en attente');
           this.isLoadingDocuments = false;
         }
       });
 
-    this.subscriptions.push(documentsSubscription);
+    this.subscriptions.push(docsSubscription);
+  }
+
+  // ===== MÉTHODES PUBLIQUES - ACTIONS PRINCIPALES - ATTENDUES PAR LE HTML =====
+
+  /**
+   * Rafraîchit manuellement les données - ATTENDU PAR LE HTML
+   */
+  rafraichir(): void {
+    const refreshSubscription = this.dashboardService.rafraichirToutesDonnees()
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Données mises à jour', 'OK', {
+            duration: 2000
+          });
+        },
+        error: (error: any) => {
+          this.gererErreur('Erreur lors de l\'actualisation');
+        }
+      });
+
+    this.subscriptions.push(refreshSubscription);
   }
 
   /**
-   * Navigue vers le détail d'une inscription
+   * Actualise les données en interne
+   */
+  actualiserDonnees(): void {
+    this.recupererStats();
+    this.chargerDemandesEnAttente();
+    this.recupererDocumentsAVerifier();
+  }
+
+  // ===== MÉTHODES DE NAVIGATION =====
+
+  /**
+   * Navigue vers le détail d'une inscription - ATTENDU PAR LE HTML
    */
   voirDetailInscription(inscription: InscriptionAttente): void {
-    this.router.navigate(['/admin/inscriptions', inscription.id]);
+    this.router.navigate(['/admin/traitement-inscription', inscription.id]);
   }
 
   /**
-   * Navigue vers la validation d'un document
+   * Navigation vers toutes les inscriptions - ATTENDU PAR LE HTML
+   */
+  voirToutesLesInscriptions(): void {
+    this.router.navigate(['/admin/gestion-inscriptions']);
+  }
+
+  /**
+   * Navigation vers tous les documents - ATTENDU PAR LE HTML
+   */
+  voirTousLesDocuments(): void {
+    this.router.navigate(['/admin/gestion-documents']);
+  }
+
+  /**
+   * Navigue vers la validation d'un document - ATTENDU PAR LE HTML
    */
   voirDocument(document: DocumentAttente): void {
-    this.router.navigate(['/admin/documents', document.id, 'validation']);
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/admin/document', document.id, 'validation'])
+    );
+    window.open(url, '_blank');
   }
 
+  // ===== MÉTHODES DE GESTION DES DOCUMENTS =====
+
   /**
-   * Télécharge un document
+   * Télécharge un document - ATTENDU PAR LE HTML
    */
   telechargerDocument(document: DocumentAttente): void {
     const downloadSubscription = this.dashboardService.telechargerDocument(document.id)
-    .subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = document.nomFichierOriginal || document.nomFichier;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      },
-      error: (error) => {
-        this.gererErreur('Impossible de télécharger le document');
-      }
-    });
+      .subscribe({
+        next: (fichier: Blob) => {
+          this.sauvegarderFichier(fichier, document.nomFichierOriginal || document.nomFichier);
+        },
+        error: (error: any) => {
+          this.gererErreur('Impossible de télécharger le document');
+        }
+      });
 
     this.subscriptions.push(downloadSubscription);
   }
 
+
   /**
-   * Valide rapidement un document depuis le dashboard
+   * Valide rapidement un document - ATTENDU PAR LE HTML
    */
   validerDocumentRapide(document: DocumentAttente): void {
-    const validationRequest: DocumentValidationRequest = {
-      documentId: document.id,
-      statut: 'VALIDE',
-      commentaires: 'Validation rapide depuis le dashboard'
-    };
+    if (confirm('Valider ce document ?')) {
+      const validationRequest: DocumentValidationRequest = {
+        documentId: document.id,
+        statut: 'VALIDE',
+        commentaires: 'Validation rapide depuis le dashboard'
+      };
 
-    const validationSubscription = this.dashboardService.validerDocument(validationRequest)
-      .subscribe({
-        next: () => {
-          this.snackBar.open('Document validé avec succès', 'Fermer', {
-            duration: 3000,
-            panelClass: ['snackbar-success']
-          });
-          this.chargerDocumentsAttente();
-          this.chargerKpis();
-        },
-        error: (error) => {
-          this.gererErreur('Impossible de valider le document');
-        }
-      });
+      const validationSubscription = this.dashboardService.validerDocument(validationRequest)
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Document approuvé', 'OK', {
+              duration: 2000,
+              panelClass: ['snackbar-success']
+            });
+            this.actualiserDonnees();
+          },
+          error: (error: any) => {
+            this.gererErreur('Impossible de valider le document');
+          }
+        });
 
-    this.subscriptions.push(validationSubscription);
+      this.subscriptions.push(validationSubscription);
+    }
   }
 
   /**
-   * Rejette un document avec un motif
+   * Rejette un document - ATTENDU PAR LE HTML (HTML utilise rejeterDocument)
    */
   rejeterDocument(document: DocumentAttente): void {
-    // Ici, vous pourriez ouvrir une dialog pour saisir le motif de rejet
     const motif = prompt('Motif de rejet (optionnel):');
 
-    if (motif !== null) { // L'utilisateur n'a pas annulé
+    if (motif !== null) {
       const rejetSubscription = this.dashboardService.rejeterDocument(
         document.id,
         motif || 'Document non conforme'
       ).subscribe({
         next: () => {
-          this.snackBar.open('Document rejeté', 'Fermer', {
-            duration: 3000,
+          this.snackBar.open('Document rejeté', 'OK', {
+            duration: 2000,
             panelClass: ['snackbar-warning']
           });
-          this.chargerDocumentsAttente();
-          this.chargerKpis();
+          this.actualiserDonnees();
         },
-        error: (error) => {
+        error: (error: any) => {
           this.gererErreur('Impossible de rejeter le document');
         }
       });
@@ -274,86 +315,131 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Gère l'affichage des erreurs
+   * Valide tous les documents d'un type donné
    */
-  private gererErreur(message: string): void {
-    this.errorMessage = message;
-    this.snackBar.open(message, 'Fermer', {
-      duration: 5000,
-      panelClass: ['snackbar-error']
-    });
-  }
+  validerTousLesDiplomes(): void {
+    const diplomes = this.documentsAttente.filter(d =>  // ← CORRECTION
+      d.typeDocument === 'DIPLOME' && d.statut === 'EN_ATTENTE'
+    );
 
-  /**
-   * Rafraîchit manuellement les données
-   */
-  rafraichir(): void {
-    this.dashboardService.rafraichirToutesDonnees().subscribe({
-      next: () => {
-        this.snackBar.open('Données mises à jour', 'Fermer', {
-          duration: 2000
-        });
-      },
-      error: (error) => {
-        this.gererErreur('Erreur lors de l\'actualisation');
-      }
-    });
-  }
+    if (diplomes.length === 0) {
+      this.snackBar.open('Aucun diplôme à valider', 'OK');
+      return;
+    }
 
-  /**
-   * Démarre le rafraichissement auto toutes les 30 sec
-   */
-  private demarrerRafraishissementAutomatique(): void {
-    this.refreshInterval = interval(30000).subscribe(() => {
-      this.chargerKpis();
-      this.chargerInscriptionsAttente();
-      this.chargerDocumentsAttente();
-    });
-  }
-
-  /**
-   * Retourne le badge color selon le statut du dossier
-   */
-  getBadgeColor(statut: string): string {
-    switch (statut) {
-      case 'COMPLET': return 'primary';
-      case 'INCOMPLET': return 'warn';
-      case 'EN_COURS': return 'accent';
-      default: return 'basic';
+    if (confirm(`Valider les ${diplomes.length} diplômes en attente ?`)) {
+      this.traiterEnLot(diplomes, 'VALIDE');
     }
   }
 
+  // ===== MÉTHODES UTILITAIRES D'AFFICHAGE =====
+
   /**
-   * Retourne l'icône selon le type de fichier
+   * Retourne la couleur du badge selon le statut - ATTENDU PAR LE HTML
+   */
+  getBadgeColor(statut: string): string {
+    const couleurs = {
+      'COMPLET': 'primary',
+      'VALIDE': 'primary',
+      'INCOMPLET': 'warn',
+      'EN_COURS': 'accent',
+      'REJETE': 'warn'
+    };
+    return couleurs[statut as keyof typeof couleurs] || 'basic';
+  }
+
+  /**
+   * Retourne l'icône du fichier - ATTENDU PAR LE HTML
    */
   getFileIcon(typeFichier: string): string {
     const type = typeFichier.toLowerCase();
     if (type.includes('pdf')) return 'picture_as_pdf';
-    if (type.includes('image')) return 'image';
+    if (type.includes('image') || type.includes('jpg') || type.includes('png')) return 'image';
     if (type.includes('word') || type.includes('doc')) return 'description';
+    if (type.includes('excel') || type.includes('xls')) return 'table_chart';
     return 'insert_drive_file';
   }
 
   /**
-   * Formate la taille d'un fichier
+   * Formate la taille d'un fichier - ATTENDU PAR LE HTML
    */
-  formatTailleFichier(taille: number): string {
-    if (taille < 1024) return `${taille} B`;
-    if (taille < 1024 * 1024) return `${(taille / 1024).toFixed(1)} KB`;
-    return `${(taille / (1024 * 1024)).toFixed(1)} MB`;
+  formatTailleFichier(octets: number): string {
+    if (octets < 1000) return `${octets} o`;
+    if (octets < 1000000) return `${Math.round(octets / 1000)} Ko`;
+    return `${Math.round(octets / 1000000)} Mo`;
+  }
+
+  formaterDateDepot(date: Date): string {
+    const joursEcoules = this.calculerJoursDepuis(date);
+    if (joursEcoules === 0) return 'Aujourd\'hui';
+    if (joursEcoules === 1) return 'Hier';
+    if (joursEcoules < 7) return `Il y a ${joursEcoules} jours`;
+    return new Date(date).toLocaleDateString('fr-FR');
+  }
+
+  estUrgent(demande: InscriptionAttente): boolean {
+    const joursEcoules = this.calculerJoursDepuis(demande.dateInscription);
+    return joursEcoules > 5 || demande.documentsManquants.length > 2;
+  }
+
+  // ===== MÉTHODES UTILITAIRES =====
+
+  private calculerJoursDepuis(date: Date): number {
+    const maintenant = new Date().getTime();
+    const datePassee = new Date(date).getTime();
+    return Math.floor((maintenant - datePassee) / (1000 * 3600 * 24));
   }
 
   /**
-   * Navigue vers la gestion complète des documents
+   * Sauvegarde un fichier téléchargé
    */
-  voirTousLesDocuments(): void {
-    this.router.navigate(['/admin/documents']);
+  // todo vérifier le type de sauvegarde
+  private sauvegarderFichier(blob: Blob, nomFichier: string): void {
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = nomFichier;
+    lien.click();
+    URL.revokeObjectURL(url);
   }
 
-  /**
-   * Navigue vers la gestion complète des inscriptions
-   */
-  voirToutesLesInscriptions(): void {
-    this.router.navigate(['/admin/inscriptions']);
+  private gererErreur(message: string): void {
+    this.errorMessage = message;
+    this.snackBar.open(message, 'OK', {
+      duration: 4000,
+      panelClass: ['snackbar-error']
+    });
+  }
+
+  private traiterEnLot(documents: DocumentAttente[], action: string): void {
+    let traites = 0;
+    documents.forEach(doc => {
+      this.dashboardService.validerDocument({
+        documentId: doc.id,
+        statut: action as any,
+        commentaires: 'Traitement en lot'
+      }).subscribe({
+        next: () => {
+          traites++;
+          if (traites === documents.length) {
+            this.snackBar.open(`${traites} documents traités`, 'OK');
+            this.actualiserDonnees();
+          }
+        },
+        error: (error: any) => {
+          this.gererErreur('Erreur lors du traitement en lot');
+        }
+      });
+    });
+  }
+
+  // ===== MÉTHODES DE CONFIGURATION =====
+
+  configurerAffichage(): void {
+    this.router.navigate(['/admin/parametres/dashboard']);
+  }
+
+  private demarrerRafraishissementAutomatique() {
+
   }
 }

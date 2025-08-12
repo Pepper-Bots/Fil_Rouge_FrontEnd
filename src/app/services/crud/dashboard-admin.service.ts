@@ -35,13 +35,13 @@ export interface InscriptionAttente {
 export interface DocumentAttente {
   id: number;
   nomFichier: string;
-  nomFichierOriginal: string;
+  nomFichierOriginal?: string;
   typeFichier: string;
-  typeDocument: 'CV' | 'PIECE_IDENTITE' | 'DIPLOME' | 'JUSTIFICATIF' | 'PHOTO' | 'AUTRE';
+  typeDocument?: 'CV' | 'PIECE_IDENTITE' | 'DIPLOME' | 'JUSTIFICATIF' | 'PHOTO' | 'AUTRE';
   stagiaireId: number;
-  stagiaireNom: string;
-  stagiairePrenom: string;
-  stagiaireEmail: string;
+  nomStagiaire: string;
+  prenomStagiaire: string; // todo verifier coherence avec models user + stagiaire
+  stagiaireEmail?: string;
   dateDepot: Date;
   statut: 'EN_ATTENTE' | 'EN_COURS' | 'VALIDE' | 'REJETE';
   taille: number;
@@ -69,7 +69,7 @@ export interface NotificationSetting {
 })
 export class DashboardService {
 
-  private readonly API_BASE_URL = environment.apiUrl || 'http://localhost:8080/api';
+  private readonly API_BASE_URL = environment.serverUrl + 'api';
 
   // Subjects pour les données en temps réel
   private kpiDataSubject = new BehaviorSubject<KpiData | null>(null);
@@ -132,18 +132,6 @@ export class DashboardService {
     }).pipe(
       tap(data => this.kpiDataSubject.next(data)),
       catchError(this.handleError('getKpis'))
-    );
-  }
-
-  /**
-   * Récupère les KPIs avec historique pour les graphiques
-   */
-  getKpisWithHistory(periode: '7d' | '30d' | '3m' = '30d'): Observable<KpiData & { historique: any[] }> {
-    return this.http.get<KpiData & { historique: any[] }>(`${this.API_BASE_URL}/admin/kpis/historique`, {
-      headers: this.getHttpHeaders(),
-      params: { periode }
-    }).pipe(
-      catchError(this.handleError('getKpisWithHistory'))
     );
   }
 
@@ -264,63 +252,67 @@ export class DashboardService {
     );
   }
 
-  // ==================== NOTIFICATIONS ====================
-
-  /**
-   * Envoie une notification à un stagiaire
-   */
-  envoyerNotificationStagiaire(stagiaireId: number, message: string, type: 'INFO' | 'WARNING' | 'SUCCESS'): Observable<any> {
-    return this.http.post(`${this.API_BASE_URL}/admin/notifications/send`, {
-      destinataireId: stagiaireId,
-      message,
-      type
-    }, {
-      headers: this.getHttpHeaders()
-    }).pipe(
-      catchError(this.handleError('envoyerNotificationStagiaire'))
-    );
-  }
-
-  /**
-   * Récupère les paramètres de notification
-   */
-  getParametresNotification(): Observable<NotificationSetting> {
-    return this.http.get<NotificationSetting>(`${this.API_BASE_URL}/admin/notifications/settings`, {
-      headers: this.getHttpHeaders()
-    }).pipe(
-      catchError(this.handleError('getParametresNotification'))
-    );
-  }
-
   // ==================== UTILITAIRES ====================
 
   /**
    * Actualise toutes les données du dashboard
    */
   rafraichirToutesDonnees(): Observable<any> {
-    const requests = [
-      this.getKpis(),
-      this.getInscriptionsAttente(),
-      this.getDocumentsAttente()
-    ];
-
-    return new Observable(observer => {
+    return new Observable<boolean>(observer => {
       let completedRequests = 0;
-      const totalRequests = requests.length;
+      const totalRequests = 3;
+      let hasError = false;
 
-      requests.forEach(request => {
-        request.subscribe({
-          next: () => {
-            completedRequests++;
-            if (completedRequests === totalRequests) {
-              observer.next(true);
-              observer.complete();
-            }
-          },
-          error: (error) => {
-            observer.error(error);
+      // Fonction pour vérifier si toutes les requêtes sont terminées
+      const checkCompletion = () => {
+        completedRequests++;
+        if (completedRequests === totalRequests) {
+          if (hasError) {
+            observer.error(new Error('Erreurs lors du rafraîchissement'));
+          } else {
+            observer.next(true);
+            observer.complete();
           }
-        });
+        }
+      };
+
+      // Requête 1: KPIs
+      this.getKpis().subscribe({
+        next: (data: KpiData) => {
+          // Les données sont automatiquement mises à jour via le BehaviorSubject
+          checkCompletion();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des KPIs:', error);
+          hasError = true;
+          checkCompletion();
+        }
+      });
+
+      // Requête 2: Inscriptions
+      this.getInscriptionsAttente().subscribe({
+        next: (data: InscriptionAttente[]) => {
+          // Les données sont automatiquement mises à jour via le BehaviorSubject
+          checkCompletion();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des inscriptions:', error);
+          hasError = true;
+          checkCompletion();
+        }
+      });
+
+      // Requête 3: Documents
+      this.getDocumentsAttente().subscribe({
+        next: (data: DocumentAttente[]) => {
+          // Les données sont automatiquement mises à jour via le BehaviorSubject
+          checkCompletion();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des documents:', error);
+          hasError = true;
+          checkCompletion();
+        }
       });
     });
   }
@@ -365,4 +357,45 @@ export class DashboardService {
       catchError(this.handleError('exporterDonnees'))
     );
   }
+
+  // ==================== NOTIFICATIONS ====================
+
+  /**
+   * Envoie une notification à un stagiaire
+   */
+  envoyerNotificationStagiaire(stagiaireId: number, message: string, type: 'INFO' | 'WARNING' | 'SUCCESS'): Observable<any> {
+    return this.http.post(`${this.API_BASE_URL}/admin/notifications/send`, {
+      destinataireId: stagiaireId,
+      message,
+      type
+    }, {
+      headers: this.getHttpHeaders()
+    }).pipe(
+      catchError(this.handleError('envoyerNotificationStagiaire'))
+    );
+  }
+
+  /**
+   * Récupère les KPIs avec historique pour les graphiques
+   */
+  getKpisWithHistory(periode: '7d' | '30d' | '3m' = '30d'): Observable<KpiData & { historique: any[] }> {
+    return this.http.get<KpiData & { historique: any[] }>(`${this.API_BASE_URL}/admin/kpis/historique`, {
+      headers: this.getHttpHeaders(),
+      params: { periode }
+    }).pipe(
+      catchError(this.handleError('getKpisWithHistory'))
+    );
+  }
+
+  /**
+   * Récupère les paramètres de notification
+   */
+  getParametresNotification(): Observable<NotificationSetting> {
+    return this.http.get<NotificationSetting>(`${this.API_BASE_URL}/admin/notifications/settings`, {
+      headers: this.getHttpHeaders()
+    }).pipe(
+      catchError(this.handleError('getParametresNotification'))
+    );
+  }
 }
+
