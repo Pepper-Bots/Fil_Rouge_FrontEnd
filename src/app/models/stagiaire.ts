@@ -5,6 +5,7 @@ import {Ville} from './ville';
 import {Evenement} from './evenement';
 import {Dossier} from './dossier';
 import {Inscription} from './inscription';
+import { Document as DocumentModel } from './document';
 
 
 export interface Stagiaire extends User {
@@ -14,7 +15,7 @@ export interface Stagiaire extends User {
   adresse: string;
   ville: Ville;
   evenements?: Evenement[];
-  documents?: Document[];
+  documents?: DocumentModel[];
   dossiers?: Dossier[];
   inscriptions?: Inscription[];
   activationToken?: string;

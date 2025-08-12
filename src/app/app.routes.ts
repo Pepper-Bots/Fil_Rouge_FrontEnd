@@ -10,6 +10,8 @@ import { DashboardStagiaireComponent } from './pages/dashboard-stagiaire/dashboa
 import { DashboardAdminComponent } from './pages/dashboard-admin/dashboard-admin.component';
 import { connecteGuard } from './services/connecte.guard';
 import { EditDossierComponent } from './pages/edit-dossier/edit-dossier.component';
+import {DocumentValidationComponent} from './pages/document-validation/document-validation.component';
+import {DocumentUploadComponent} from './pages/document-upload/document-upload.component';
 
 export const routes: Routes = [
   // Route racine - redirige vers preconnexion
@@ -38,7 +40,19 @@ export const routes: Routes = [
     canActivate: [connecteGuard]
   },
 
-  // Routes pour les dossiers
+  // Routes pour la feature Document
+  {
+    path: 'document-upload',
+    component: DocumentUploadComponent,
+    canActivate: [connecteGuard]
+  },
+  {
+    path: 'document-validation',
+    component: DocumentValidationComponent,
+    canActivate: [connecteGuard]
+  },
+
+  // Routes pour les Dossiers
   {
     path: 'dossiers',
     component: DossiersListComponent,
@@ -69,4 +83,5 @@ export const routes: Routes = [
 
   // Route 404 - DOIT ÊTRE EN DERNIER
   { path: '**', component: Page404Component }
+
 ];

@@ -1,49 +1,306 @@
-<!--Dashboard Admin :
-
-📥 Liste des documents reçus des stagiaires
-👁️ Visualisation des documents
-✅ Validation/Rejet des documents
-📊 Statistiques des soumissions
-👥 Gestion des stagiaires-->
-
-<div class="dashboard-admin-container" *ngIf="!loading">
-  <h2>Bienvenue sur le Dashboard Admin !</h2>
-  <p>Vous pouvez gérer ici les utilisateurs, formations, dossiers, et voir les KPIs.</p>
-
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">Stagiaires inscrits</div>
-      <div class="kpi-value">{{ nbStagiaires }}</div>
+<div class="dashboard-container">
+  <!-- Header avec actions -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard Administrateur
+      </h1>
+      <p class="dashboard-subtitle">
+        Gérez efficacement les inscriptions, formations et documents
+      </p>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Formations en cours</div>
-      <div class="kpi-value">{{ nbFormations }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Intervenants actifs</div>
-      <div class="kpi-value">{{ nbIntervenants }}</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Documents en attente</div>
-      <div class="kpi-value">{{ nbDocsAttente }}</div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="rafraichir()" matTooltip="Actualiser les données">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Paramètres">
+        <mat-icon>settings</mat-icon>
+      </button>
     </div>
   </div>
 
-  <h3>Inscriptions en attente</h3>
-  <ul>
-    <li *ngFor="let inscription of inscriptionsEnAttente">
-      {{ inscription.stagiaireNom }} - {{ inscription.formationNom }} (Dossier : {{ inscription.statutDossier }})
-    </li>
-  </ul>
+  <!-- KPIs Cards -->
+  <div class="kpis-section">
+    <h2 class="section-title">Indicateurs clés</h2>
 
-  <h3>Documents à vérifier</h3>
-  <ul>
-    <li *ngFor="let doc of docsAttente">
-      {{ doc.nomFichier }} - {{ doc.stagiaireNom }} -
-      <a [href]="doc.urlFichier" target="_blank">Voir</a>
-    </li>
-  </ul>
-</div>
-<div *ngIf="loading" class="dashboard-loading">
-  Chargement du dashboard...
+    <div class="kpis-grid" *ngIf="!isLoadingKpis; else loadingKpis">
+      <mat-card class="kpi-card stagiaires">
+        <mat-card-content>
+          <div class="kpi-content">
+            <div class="kpi-icon">
+              <mat-icon>school</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <h3 class="kpi-value">{{ kpiData.nbStagiaires }}</h3>
+              <p class="kpi-label">Stagiaires inscrits</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card formations">
+        <mat-card-content>
+          <div class="kpi-content">
+            <div class="kpi-icon">
+              <mat-icon>class</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <h3 class="kpi-value">{{ kpiData.nbFormations }}</h3>
+              <p class="kpi-label">Formations en cours</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card intervenants">
+        <mat-card-content>
+          <div class="kpi-content">
+            <div class="kpi-icon">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <h3 class="kpi-value">{{ kpiData.nbIntervenants }}</h3>
+              <p class="kpi-label">Intervenants actifs</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card documents-attente">
+        <mat-card-content>
+          <div class="kpi-content">
+            <div class="kpi-icon">
+              <mat-icon>hourglass_empty</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <h3 class="kpi-value">{{ kpiData.nbDocsAttente }}</h3>
+              <p class="kpi-label">Documents en attente</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <ng-template #loadingKpis>
+      <div class="kpis-grid">
+        <mat-card class="kpi-card" *ngFor="let i of [1,2,3,4]">
+          <mat-card-content>
+            <div class="kpi-content">
+              <div class="kpi-skeleton">
+                <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-content">
+
+    <!-- Inscriptions en attente -->
+    <mat-card class="content-card inscriptions-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person_add</mat-icon>
+          Inscriptions en attente
+          <mat-chip-list>
+            <mat-chip color="warn" selected>{{ inscriptionsAttente.length }}</mat-chip>
+          </mat-chip-list>
+        </mat-card-title>
+        <mat-card-subtitle>Dossiers nécessitant votre attention</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="card-content" *ngIf="!isLoadingInscriptions; else loadingInscriptions">
+          <div class="empty-state" *ngIf="inscriptionsAttente.length === 0">
+            <mat-icon>check_circle</mat-icon>
+            <p>Aucune inscription en attente</p>
+          </div>
+
+          <div class="list-container" *ngIf="inscriptionsAttente.length > 0">
+            <mat-list>
+              <mat-list-item
+                *ngFor="let inscription of inscriptionsAttente; let i = index"
+                class="inscription-item"
+                [class.urgent]="i < 3">
+
+                <div matListItemLine class="inscription-info">
+                  <div class="inscription-header">
+                    <span class="stagiaire-nom">
+                      {{ inscription.stagiairePrenom }} {{ inscription.stagiaireNom }}
+                    </span>
+                    <mat-chip
+                      [color]="getBadgeColor(inscription.statutDossier)"
+                      selected
+                      class="statut-chip">
+                      {{ inscription.statutDossier }}
+                    </mat-chip>
+                  </div>
+
+                  <div class="inscription-details">
+                    <span class="formation">{{ inscription.formationNom }}</span>
+                    <span class="date">{{ inscription.dateInscription | date:'short' }}</span>
+                  </div>
+
+                  <div class="documents-manquants" *ngIf="inscription.documentsManquants.length > 0">
+                    <mat-chip-list>
+                      <mat-chip
+                        *ngFor="let doc of inscription.documentsManquants"
+                        color="warn"
+                        class="doc-manquant">
+                        {{ doc }}
+                      </mat-chip>
+                    </mat-chip-list>
+                  </div>
+                </div>
+
+                <div matListItemLine class="inscription-actions">
+                  <button
+                    mat-button
+                    color="primary"
+                    (click)="voirDetailInscription(inscription)"
+                    matTooltip="Voir le détail du dossier">
+                    <mat-icon>visibility</mat-icon>
+                    Traiter
+                  </button>
+                </div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </div>
+
+        <ng-template #loadingInscriptions>
+          <div class="loading-state">
+            <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+            <p>Chargement des inscriptions...</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+
+      <mat-card-actions *ngIf="inscriptionsAttente.length > 0">
+        <button mat-button color="primary" (click)="voirToutesLesInscriptions()">
+          Voir toutes les inscriptions
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- Documents à vérifier -->
+    <mat-card class="content-card documents-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>description</mat-icon>
+          Documents à vérifier
+          <mat-chip-list>
+            <mat-chip color="accent" selected>{{ documentsAttente.length }}</mat-chip>
+          </mat-chip-list>
+        </mat-card-title>
+        <mat-card-subtitle>Validation des documents déposés</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="card-content" *ngIf="!isLoadingDocuments; else loadingDocuments">
+          <div class="empty-state" *ngIf="documentsAttente.length === 0">
+            <mat-icon>verified</mat-icon>
+            <p>Tous les documents sont traités</p>
+          </div>
+
+          <div class="list-container" *ngIf="documentsAttente.length > 0">
+            <mat-list>
+              <mat-list-item
+                *ngFor="let document of documentsAttente"
+                class="document-item">
+
+                <div matListItemLine class="document-info">
+                  <div class="document-header">
+                    <mat-icon class="file-icon">{{ getFileIcon(document.typeFichier) }}</mat-icon>
+                    <span class="file-name">{{ document.nomFichier }}</span>
+                    <span class="file-size">{{ formatTailleFichier(document.taille) }}</span>
+                  </div>
+
+                  <div class="document-details">
+                    <span class="stagiaire">
+                      <mat-icon class="small-icon">person</mat-icon>
+                      {{ document.stagiairePrenom }} {{ document.stagiaireNom }}
+                    </span>
+                    <span class="date">
+                      <mat-icon class="small-icon">schedule</mat-icon>
+                      {{ document.dateDepot | date:'short' }}
+                    </span>
+                    <span class="type">
+                      <mat-icon class="small-icon">category</mat-icon>
+                      {{ document.typeFichier }}
+                    </span>
+                  </div>
+                </div>
+
+                <div matListItemLine class="document-actions">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="telechargerDocument(document)"
+                    matTooltip="Télécharger">
+                    <mat-icon>download</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="voirDocument(document)"
+                    matTooltip="Voir et valider">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    (click)="validerDocumentRapide(document)"
+                    matTooltip="Validation rapide">
+                    <mat-icon>check</mat-icon>
+                  </button>
+
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    (click)="rejeterDocument(document)"
+                    matTooltip="Rejeter">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </div>
+
+        <ng-template #loadingDocuments>
+          <div class="loading-state">
+            <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+            <p>Chargement des documents...</p>
+          </div>
+        </ng-template>
+      </mat-card-content>
+
+      <mat-card-actions *ngIf="documentsAttente.length > 0">
+        <button mat-button color="primary" (click)="voirTousLesDocuments()">
+          Voir tous les documents
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <mat-card color="warn">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon>error</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

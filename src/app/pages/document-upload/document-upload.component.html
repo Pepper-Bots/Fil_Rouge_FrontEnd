@@ -1,15 +1,130 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <label>Type de document</label>
-  <select formControlName="type">
-    <option value="">-- Choisir --</option>
-    <option value="CNI">CNI</option>
-    <option value="JUSTIFICATIF_DOMICILE">Justificatif de domicile</option>
-    <option value="CV">CV</option>
-  </select>
+<div class="max-w-2xl mx-auto p-6">
+  <mat-card class="shadow-lg">
+    <mat-card-header class="pb-4">
+      <mat-card-title class="flex items-center text-xl">
+        <mat-icon class="mr-2">cloud_upload</mat-icon>
+        Déposer un document
+      </mat-card-title>
+      <mat-card-subtitle class="text-gray-600">
+        Envoyez vos documents requis pour votre formation
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Sélection du type de document-->
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label> Type de document </mat-label>
+          <mat-select formControlName="type" required>
+            <mat-option *ngFor="let type of typesDocument" [value]="type">
+              {{ getTypeDisplayName(type) }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.get('type')?.hasError('required')">
+            Veuillez sélectionner un type de document
+          </mat-error>
+        </mat-form-field>
 
 
-  <label>Fichier</label>
-  <input type="file" (change)="onFileChange($event)" accept=".pdf,.jpg,.png" />
+        <!-- Zone de dépôt de fichier -->
+        <div class="space-y-4">
+          <label class="block text-sm font-medium text-gray-700">
+            Fichier à envoyer
+          </label>
 
-  <button type="submit" [disabled]="form.invalid">Envoyer</button>
-</form>
+        <!-- Zone drag & drop avec Tailwind + Material -->
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50"
+            [class.border-green-400]="selectedFile"
+            [class.bg-green-50]="selectedFile"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            (click)="document.getElementById('fileInput')?.click()">
+
+            <div *ngIf="!selectedFile" class="space-y-3">
+              <mat-icon class="text-6xl text-gray-400">cloud_upload</mat-icon>
+              <div>
+                <p class="text-lg font-medium text-gray-700">Glissez-déposez votre fichier ici</p>
+                <p class="text-sm text-gray-500">ou cliquez pour sélectionner</p>
+              </div>
+              <p class="text-xs text-gray-400">
+                Formats acceptés : PDF, JPEG, PNG, DOC, DOCX (max 10MB)
+              </p>
+            </div>
+
+            <div *ngIf="selectedFile" class="space-y-2">
+              <mat-icon class="text-6xl text-green-600">check_circle</mat-icon>
+              <div>
+                <p class="text-lg font-medium text-green-700">{{ selectedFile.name }}</p>
+                <p class)="text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!--  Input file caché  -->
+          <input
+            type="file"
+            id="fileInput"
+            class="hidden"
+            accept=".pdf, .jpg, .jpeg, .png, .doc, .docx"
+            (change)="onFileChange($event)">
+
+        <div *ngIf="form.get('file')?.invalid && form.get('file')?.touched"
+             class="text-red-600 text-sm mt-1">
+          Veuillez sélectionner un fichier
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="flex justify-between space-x-4 pt-4">
+        <button
+          type="button"
+          mat-stroked-button
+          color="warn"
+          (click)="resetForm()"
+          [disabled]="isUploading"
+          class="flex-1">
+          <mat-icon>clear</mat-icon>
+          Annuler
+        </button>
+
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="!form.valid || !selectedFile || isUploading"
+          class="flex-1">
+          <mat-spinner
+            *ngIf="isUploading"
+            diameter="20"
+            class="mr-2">
+          </mat-spinner>
+          <mat-icon *ngIf="!isUploading">send</mat-icon>
+          {{ isUploading ? 'Envoi...' : 'Envoyer' }}
+        </button>
+      </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!--  Aide contextuelle -->
+  <mat-card class="mt-6 bg-blue-50">
+    <mat-card-content class="p-4">
+      <div class="flex items-start space-x-3">
+        <mat-icon class="text-blue-600 mt-1">info</mat-icon>
+        <div class="space-y-2">
+          <h6 class="font-medium text-blue-900">Informations importantes</h6>
+          <ul class="text-sm text-blue-800 space-y-1">
+            <li>- Les documents sont vérifiés par l'administration avant validatiob</li>
+            <li>- Vous recevrez une notification une fois le document traité</li>
+            <li>- Assurez-vous que le document est lisible et complet</li>
+            <li>- Format PDF recommandé pour une meilleure qualité</li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

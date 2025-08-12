@@ -1,4 +1,4 @@
-// models/document.model.ts
+// app/models/document.d.ts
 
 import { TypeDocument } from './type-document.enum';
 import { StatutDocument } from './statut-document.model';

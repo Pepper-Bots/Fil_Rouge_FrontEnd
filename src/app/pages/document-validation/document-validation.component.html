@@ -1,1 +1,33 @@
-<p>document-validation works!</p>
+<!-- src/app/pages/document-validation/document-validation.component.html -->
+
+<div class="p-6">
+  <h2>Validation des documents</h2>
+
+  <div *ngIf="isLoading">Chargement...</div>
+
+  <div *ngIf="!isLoading && documents.length === 0">
+    Aucun document en attente
+  </div>
+
+  <div *ngFor="let doc of documents" class="border p-4 m-2">
+    <h4>{{ getTypeDisplayName(doc.type) }}</h4>
+    <p>{{ doc.nomFichier }}</p>
+    <button (click)="selectDocument(doc)">Sélectionner</button>
+  </div>
+
+  <div *ngIf="selectedDocument" class="mt-4 p-4 border">
+    <h3>Document sélectionné</h3>
+    <p>{{ selectedDocument.nomFichier }}</p>
+
+    <form [formGroup]="validationForm">
+      <textarea formControlName="commentaire" placeholder="Commentaire"></textarea>
+    </form>
+
+    <button (click)="validateDocument('VALIDÉ')" [disabled]="isValidating">
+      Valider
+    </button>
+    <button (click)="validateDocument('REFUSÉ')" [disabled]="isValidating">
+      Refuser
+    </button>
+  </div>
+</div>
