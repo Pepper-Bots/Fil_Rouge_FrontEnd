@@ -107,7 +107,7 @@
           <mat-icon>person_add</mat-icon>
           Inscriptions en attente
           <mat-chip-set>
-            <mat-chip color="warn" selected>{{ inscriptionsAttente.length }}</mat-chip>
+            <mat-chip color="warn" selected>{{ InscriptionsAttente.length }}</mat-chip>
           </mat-chip-set>
         </mat-card-title>
         <mat-card-subtitle>Dossiers nécessitant votre attention</mat-card-subtitle>
@@ -115,22 +115,22 @@
 
       <mat-card-content>
         <div class="card-content" *ngIf="!isLoadingInscriptions; else loadingInscriptions">
-          <div class="empty-state" *ngIf="inscriptionsAttente.length === 0">
+          <div class="empty-state" *ngIf="InscriptionsAttente.length === 0">
             <mat-icon>check_circle</mat-icon>
             <p>Aucune inscription en attente</p>
           </div>
 
-          <div class="list-container" *ngIf="inscriptionsAttente.length > 0">
+          <div class="list-container" *ngIf="InscriptionsAttente.length > 0">
             <mat-list>
               <mat-list-item
-                *ngFor="let inscription of inscriptionsAttente; let i = index"
+                *ngFor="let inscription of InscriptionsAttente; let i = index"
                 class="inscription-item"
                 [class.urgent]="i < 3">
 
                 <div matListItemLine class="inscription-info">
                   <div class="inscription-header">
                     <span class="stagiaire-nom">
-                      {{ inscription.stagiairePrenom }} {{ inscription.stagiaireNom }}
+                      {{ inscription.stagiaire.firstName }} {{ inscription.stagiaire.lastName }}
                     </span>
                     <mat-chip
                       [color]="getBadgeColor(inscription.statutDossier)"
@@ -180,7 +180,7 @@
         </ng-template>
       </mat-card-content>
 
-      <mat-card-actions *ngIf="inscriptionsAttente.length > 0">
+      <mat-card-actions *ngIf="InscriptionsAttente.length > 0">
         <button mat-button color="primary" (click)="voirToutesLesInscriptions()">
           Voir toutes les inscriptions
           <mat-icon>arrow_forward</mat-icon>
@@ -195,7 +195,7 @@
           <mat-icon>description</mat-icon>
           Documents à vérifier
           <mat-chip-set>
-            <mat-chip color="accent" selected>{{ documentsAttente.length }}</mat-chip>
+            <mat-chip color="accent" selected>{{ DocumentsAttente.length }}</mat-chip>
           </mat-chip-set>
         </mat-card-title>
         <mat-card-subtitle>Validation des documents déposés</mat-card-subtitle>
@@ -203,15 +203,15 @@
 
       <mat-card-content>
         <div class="card-content" *ngIf="!isLoadingDocuments; else loadingDocuments">
-          <div class="empty-state" *ngIf="documentsAttente.length === 0">
+          <div class="empty-state" *ngIf="DocumentsAttente.length === 0">
             <mat-icon>verified</mat-icon>
             <p>Tous les documents sont traités</p>
           </div>
 
-          <div class="list-container" *ngIf="documentsAttente.length > 0">
+          <div class="list-container" *ngIf="DocumentsAttente.length > 0">
             <mat-list>
               <mat-list-item
-                *ngFor="let document of documentsAttente"
+                *ngFor="let document of DocumentsAttente"
                 class="document-item">
 
                 <div matListItemLine class="document-info">
@@ -224,7 +224,7 @@
                   <div class="document-details">
                     <span class="stagiaire">
                       <mat-icon class="small-icon">person</mat-icon>
-                      {{ document.stagiairePrenom }} {{ document.stagiaireNom }}
+                      {{ document.stagiaire.firstName }} {{ document.stagiaire.lastName }}
                     </span>
                     <span class="date">
                       <mat-icon class="small-icon">schedule</mat-icon>
@@ -283,7 +283,7 @@
         </ng-template>
       </mat-card-content>
 
-      <mat-card-actions *ngIf="documentsAttente.length > 0">
+      <mat-card-actions *ngIf="DocumentsAttente.length > 0">
         <button mat-button color="primary" (click)="voirTousLesDocuments()">
           Voir tous les documents
           <mat-icon>arrow_forward</mat-icon>
@@ -293,11 +293,11 @@
   </div>
 
   <!-- Error Message -->
-  <div class="error-message" *ngIf="errorMessage">
-    <mat-card color="warn">
+  <div class="info-message" *ngIf="errorMessage && !isLoadingKpis">
+    <mat-card class="info-card">
       <mat-card-content>
-        <div class="error-content">
-          <mat-icon>error</mat-icon>
+        <div class="info-content">
+          <mat-icon>info</mat-icon>
           <span>{{ errorMessage }}</span>
         </div>
       </mat-card-content>

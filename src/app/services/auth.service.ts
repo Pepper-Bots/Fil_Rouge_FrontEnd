@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {jwtDecode} from 'jwt-decode';
 import { Router } from '@angular/router';
@@ -80,12 +80,28 @@ export class AuthService {
    */
   decodeJwt(jwt: string) {
     localStorage.setItem(this.tokenKey, jwt);
+
     try {
       const payload = jwtDecode<JwtPayload>(jwt);
+      console.log('JWT décodé:', payload); // ⚠️debug
+
       this.role = payload.role;
+      console.log('Rôle assigné:', this.role); // ⚠️
+
       localStorage.setItem('role', payload.role);
+      console.log('Rôle sauvegardé dans localStorage:', payload.role); // ⚠️
+
       this.connecte = true;
       this.premiereConnexionSubject.next(payload.premiereConnexion);
+
+      // Debug final
+      console.log('✅ État final AuthService:', {
+        connecte: this.connecte,
+        role: this.role,
+        isAdmin: this.isAdmin(),
+        isStagiaire: this.isStagiaire()
+      });
+
     } catch (e) {
       console.error('Erreur de décodage JWT', e);
       this.logout();
@@ -256,11 +272,37 @@ export class AuthService {
    * Mock login pour développement
    */
   private mockLogin(email: string, password: string): Observable<any> {
-    // Gardez votre logique actuelle qui fonctionne
+    console.log('🔥 MOCK LOGIN - Email:', email);
+
+    let role = 'STAGIAIRE'; // Par défaut
+    let userId = 101;
+
+    // 🎯 DÉTECTION BASÉE SUR VOS VRAIS EMAILS ADMIN
+    const adminsEmails = [
+      'alice@example.com',
+      'bruno@example.com',
+      'cecile@example.com',
+      'david@example.com'
+    ];
+
+    if (adminsEmails.includes(email) || email.includes('admin')) {
+      role = 'ADMIN';
+      userId = 1;
+      console.log('🔧 ✅ ADMIN détecté pour:', email);
+    } else if (email.includes('super')) {
+      role = 'SUPER_ADMIN';
+      userId = 1;
+      console.log('🔧 ✅ SUPER_ADMIN détecté pour:', email);
+    } else {
+      role = 'STAGIAIRE';
+      userId = 101;
+      console.log('🔧 ✅ STAGIAIRE détecté pour:', email);
+    }
+
     const mockPayload = {
-      id: 1,
+      id: userId,
       email: email,
-      role: 'ADMIN', // ou changez selon vos tests
+      role: role, // ⬅️ Maintenant correctement détecté !
       lastName: 'Test',
       firstName: 'Utilisateur',
       premiereConnexion: false,
@@ -268,18 +310,18 @@ export class AuthService {
       adresse: '123 Rue Test',
       phone: '0123456789',
       dateNaissance: '1990-01-01',
-      departement: 'IT',
-      permissions: ['READ', 'WRITE']
+      departement: 'IT'
     };
 
-    // Création d'un faux JWT
+    console.log('🎭 Payload créé:', mockPayload);
+
     const header = btoa(JSON.stringify({ typ: 'JWT', alg: 'HS256' }));
     const payload = btoa(JSON.stringify(mockPayload));
     const mockJWT = `${header}.${payload}.fake-signature`;
 
-    // Simulation d'une réponse
     return new Observable(observer => {
       setTimeout(() => {
+        console.log('🚀 Décodage du JWT...');
         this.decodeJwt(mockJWT);
         observer.next({
           token: mockJWT,
@@ -288,5 +330,37 @@ export class AuthService {
         observer.complete();
       }, 1000);
     });
+  }
+
+  /**
+   * Récupère le rôle de l'utilisateur connecté (méthode dédiée pour le layout)
+   */
+  getUserRole(): string | null {
+    // Essaie d'abord de récupérer depuis la propriété de service
+    if (this.role) {
+      return this.role;
+    }
+
+    // Sinon, essaie depuis le localStorage
+    const roleFromStorage = localStorage.getItem('role');
+    if (roleFromStorage) {
+      this.role = roleFromStorage; // Met à jour la propriété
+      return roleFromStorage;
+    }
+
+    // En dernier recours, décode le JWT
+    const token = this.getToken();
+    if (token) {
+      try {
+        const payload = jwtDecode<JwtPayload>(token);
+        this.role = payload.role;
+        localStorage.setItem('role', payload.role);
+        return payload.role;
+      } catch (error) {
+        console.error('Erreur lors du décodage du JWT pour getUserRole:', error);
+      }
+    }
+
+    return null;
   }
 }

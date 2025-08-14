@@ -20,6 +20,6 @@ export interface Stagiaire extends User {
   inscriptions?: Inscription[];
   activationToken?: string;
   photoProfil?: string;
-  statutActuelInscription?: string; // ou StatutInscription (enum) si exposé côté back
+  statutActuelInscription?: 'INCOMPLET' | 'COMPLET' | 'EN_COURS' | 'VALIDE' | null;
 }
 

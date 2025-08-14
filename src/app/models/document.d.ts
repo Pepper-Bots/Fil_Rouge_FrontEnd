@@ -20,3 +20,8 @@ export interface Document {
   dateDepot?: string;     // ISO string
   urlFichier?: string;
 }
+
+export interface DocumentStatutUpdate {
+  statut: string;
+  commentaire?: string;
+}

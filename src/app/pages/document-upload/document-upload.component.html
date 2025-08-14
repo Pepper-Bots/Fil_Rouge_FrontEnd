@@ -1,130 +1,303 @@
-<div class="max-w-2xl mx-auto p-6">
-  <mat-card class="shadow-lg">
-    <mat-card-header class="pb-4">
-      <mat-card-title class="flex items-center text-xl">
-        <mat-icon class="mr-2">cloud_upload</mat-icon>
-        Déposer un document
-      </mat-card-title>
-      <mat-card-subtitle class="text-gray-600">
-        Envoyez vos documents requis pour votre formation
-      </mat-card-subtitle>
-    </mat-card-header>
+<!-- Page d'envoi de documents - sans layout car géré par AuthenticatedLayoutComponent -->
+<div class="document-upload-page">
+  <!-- Header de la page -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon>cloud_upload</mat-icon>
+      Envoi de documents
+    </h1>
+    <p class="page-subtitle">Gérez vos documents de candidature</p>
+  </div>
 
-    <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+  <div class="page-content">
 
-    <!-- Sélection du type de document-->
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label> Type de document </mat-label>
-          <mat-select formControlName="type" required>
-            <mat-option *ngFor="let type of typesDocument" [value]="type">
-              {{ getTypeDisplayName(type) }}
+    <!-- Sélecteur de formation -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>school</mat-icon>
+          Sélectionner une formation
+        </mat-card-title>
+        <mat-card-subtitle>
+          Choisissez la formation pour laquelle vous souhaitez envoyer des documents
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Formation</mat-label>
+          <mat-select formControlName="formation" (selectionChange)="onFormationChange($event.value)">
+            <mat-option *ngFor="let formation of formations" [value]="formation">
+              <div class="formation-option">
+                <span class="formation-name">{{formation.nom}}</span>
+
+                <!-- Indicateur d'inscription -->
+                <span class="formation-status"
+                      [class.inscrit]="formation.statutDossier !== 'NON_INSCRIT'"
+                      [class.non-inscrit]="formation.statutDossier === 'NON_INSCRIT'">
+
+          <!-- Si inscrit : afficher le pourcentage -->
+          <span *ngIf="formation.statutDossier !== 'NON_INSCRIT'">
+            ({{formation.pourcentageCompletion}}% complété)
+          </span>
+
+                  <!-- Si non inscrit : afficher "Découvrir" -->
+          <span *ngIf="formation.statutDossier === 'NON_INSCRIT'">
+            (Découvrir cette formation)
+          </span>
+        </span>
+              </div>
             </mat-option>
           </mat-select>
-          <mat-error *ngIf="form.get('type')?.hasError('required')">
-            Veuillez sélectionner un type de document
+          <mat-error *ngIf="form.get('formation')?.hasError('required')">
+            Veuillez sélectionner une formation
           </mat-error>
         </mat-form-field>
+      </mat-card-content>
+    </mat-card>
 
+    <!-- Loading state pour les formations -->
+    <mat-card *ngIf="isLoadingFormations">
+      <mat-card-content>
+        <div class="custom-loading">
+          <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+          <p class="loading-text">Chargement des formations...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-        <!-- Zone de dépôt de fichier -->
-        <div class="space-y-4">
-          <label class="block text-sm font-medium text-gray-700">
-            Fichier à envoyer
-          </label>
+    <!-- Progression pour la formation sélectionnée -->
+    <mat-card *ngIf="selectedFormation && statutDossierFormation && !isLoadingDossier">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assessment</mat-icon>
+          Progression - {{selectedFormation.nom}}
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ getPourcentageCompletion() }}% complété - {{ isDossierComplet() ? 'Complet' : 'En cours' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="progress-section">
+          <div class="progress-text">
+            <span>Progression du dossier</span>
+            <span class="percentage">{{ getPourcentageCompletion() }}%</span>
+          </div>
+          <mat-progress-bar
+            [value]="getPourcentageCompletion()"
+            mode="determinate">
+          </mat-progress-bar>
+          <div *ngIf="isDossierComplet()" class="completion-message">
+            <mat-icon>check_circle</mat-icon>
+            <span>Tous les documents requis ont été envoyés !</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-        <!-- Zone drag & drop avec Tailwind + Material -->
-          <div
-            class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50"
-            [class.border-green-400]="selectedFile"
-            [class.bg-green-50]="selectedFile"
-            (dragover)="onDragOver($event)"
-            (dragleave)="onDragLeave($event)"
-            (drop)="onDrop($event)"
-            (click)="document.getElementById('fileInput')?.click()">
+    <!-- Loading state pour le dossier -->
+    <mat-card *ngIf="isLoadingDossier">
+      <mat-card-content>
+        <div class="custom-loading">
+          <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+          <p class="loading-text">Chargement des données...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-            <div *ngIf="!selectedFile" class="space-y-3">
-              <mat-icon class="text-6xl text-gray-400">cloud_upload</mat-icon>
-              <div>
-                <p class="text-lg font-medium text-gray-700">Glissez-déposez votre fichier ici</p>
-                <p class="text-sm text-gray-500">ou cliquez pour sélectionner</p>
+    <!-- Documents requis pour la formation sélectionnée -->
+    <mat-card *ngIf="selectedFormation && documentsRequisFormation.length > 0">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>assignment</mat-icon>
+          Documents requis pour {{selectedFormation.nom}}
+        </mat-card-title>
+        <mat-card-subtitle>
+          Cliquez sur "Uploader" pour ajouter rapidement un document
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="documents-list">
+          <div *ngFor="let typeDoc of documentsRequisFormation"
+               class="document-item"
+               [class.document-uploaded]="isDocumentUploade(typeDoc)"
+               [class.document-pending]="!isDocumentUploade(typeDoc)">
+
+            <div class="document-info">
+              <mat-icon class="status-icon"
+                        [class.status-valid]="getDocumentStatus(typeDoc) === 'VALIDE'"
+                        [class.status-pending]="getDocumentStatus(typeDoc) === 'EN_ATTENTE'"
+                        [class.status-missing]="getDocumentStatus(typeDoc) === 'MANQUANT'"
+                        [class.status-error]="getDocumentStatus(typeDoc) === 'REJETE'">
+                {{ getStatusIcon(getDocumentStatus(typeDoc)) }}
+              </mat-icon>
+
+              <!-- 👍 UN SEUL BLOC document-details (corrigé) -->
+              <div class="document-details">
+                <div class="document-name">{{ getTypeDisplayName(typeDoc) }}</div>
+
+                <!-- ✅ Description ajoutée ici -->
+                <div class="document-description">
+                  <small class="text-muted">{{ getDocumentDescription(typeDoc) }}</small>
+                </div>
+
+                <div class="document-badges">
+                  <span class="badge badge-required">Obligatoire</span>
+                  <span *ngIf="getDocumentStatus(typeDoc) !== 'MANQUANT'"
+                        class="badge"
+                        [class.badge-valid]="getDocumentStatus(typeDoc) === 'VALIDE'"
+                        [class.badge-pending]="getDocumentStatus(typeDoc) === 'EN_ATTENTE'"
+                        [class.badge-error]="getDocumentStatus(typeDoc) === 'REJETE'">
+        {{ getDocumentStatus(typeDoc) }}
+      </span>
+                </div>
               </div>
-              <p class="text-xs text-gray-400">
-                Formats acceptés : PDF, JPEG, PNG, DOC, DOCX (max 10MB)
-              </p>
             </div>
 
-            <div *ngIf="selectedFile" class="space-y-2">
-              <mat-icon class="text-6xl text-green-600">check_circle</mat-icon>
-              <div>
-                <p class="text-lg font-medium text-green-700">{{ selectedFile.name }}</p>
-                <p class)="text-sm text-gray-500">{{ formatFileSize(selectedFile.size) }}</p>
-              </div>
+            <div class="document-actions">
+              <button
+                mat-raised-button
+                [color]="isDocumentUploade(typeDoc) ? 'primary' : 'accent'"
+                (click)="uploaderDocumentRapide(typeDoc)"
+                [disabled]="isUploading"
+                class="action-button">
+                <mat-icon>{{ isDocumentUploade(typeDoc) ? 'refresh' : 'upload' }}</mat-icon>
+                {{ isDocumentUploade(typeDoc) ? 'Remplacer' : 'Uploader' }}
+              </button>
             </div>
           </div>
-
-          <!--  Input file caché  -->
-          <input
-            type="file"
-            id="fileInput"
-            class="hidden"
-            accept=".pdf, .jpg, .jpeg, .png, .doc, .docx"
-            (change)="onFileChange($event)">
-
-        <div *ngIf="form.get('file')?.invalid && form.get('file')?.touched"
-             class="text-red-600 text-sm mt-1">
-          Veuillez sélectionner un fichier
         </div>
-      </div>
+      </mat-card-content>
+    </mat-card>
 
-      <!-- Boutons d'action -->
-      <div class="flex justify-between space-x-4 pt-4">
-        <button
-          type="button"
-          mat-stroked-button
-          color="warn"
-          (click)="resetForm()"
-          [disabled]="isUploading"
-          class="flex-1">
-          <mat-icon>clear</mat-icon>
-          Annuler
-        </button>
+    <!-- Zone d'upload principal -->
+    <mat-card *ngIf="selectedFormation">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>cloud_upload</mat-icon>
+          Déposer un document pour {{selectedFormation.nom}}
+        </mat-card-title>
+        <mat-card-subtitle>
+          Envoyez vos documents requis pour cette formation
+        </mat-card-subtitle>
+      </mat-card-header>
 
-        <button
-          type="submit"
-          mat-raised-button
-          color="primary"
-          [disabled]="!form.valid || !selectedFile || isUploading"
-          class="flex-1">
-          <mat-spinner
-            *ngIf="isUploading"
-            diameter="20"
-            class="mr-2">
-          </mat-spinner>
-          <mat-icon *ngIf="!isUploading">send</mat-icon>
-          {{ isUploading ? 'Envoi...' : 'Envoyer' }}
-        </button>
-      </div>
+      <mat-card-content>
+        <div class="upload-zone">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-      </form>
-    </mat-card-content>
-  </mat-card>
+            <!-- Sélection du type de document -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Type de document</mat-label>
+              <mat-select formControlName="type" required>
+                <mat-option *ngFor="let type of getTypesDocumentsDisponibles()" [value]="type">
+                  {{ getTypeDisplayName(type) }}
+                  <span *ngIf="isDocumentRequis(type)" class="required-indicator"> *</span>
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="form.get('type')?.hasError('required')">
+                Veuillez sélectionner un type de document
+              </mat-error>
+            </mat-form-field>
 
-  <!--  Aide contextuelle -->
-  <mat-card class="mt-6 bg-blue-50">
-    <mat-card-content class="p-4">
-      <div class="flex items-start space-x-3">
-        <mat-icon class="text-blue-600 mt-1">info</mat-icon>
-        <div class="space-y-2">
-          <h6 class="font-medium text-blue-900">Informations importantes</h6>
-          <ul class="text-sm text-blue-800 space-y-1">
-            <li>- Les documents sont vérifiés par l'administration avant validatiob</li>
-            <li>- Vous recevrez une notification une fois le document traité</li>
-            <li>- Assurez-vous que le document est lisible et complet</li>
-            <li>- Format PDF recommandé pour une meilleure qualité</li>
-          </ul>
+            <!-- Zone de dépôt de fichier -->
+            <div class="file-upload-section">
+              <label class="upload-label">
+                Document à envoyer *
+              </label>
+
+              <!-- Zone drag & drop -->
+              <div class="file-drop-zone"
+                   [class.drag-over]="isDragOver"
+                   (dragover)="onDragOver($event)"
+                   (dragleave)="onDragLeave($event)"
+                   (drop)="onDrop($event)"
+                   (click)="fileInput.click()">
+
+                <div *ngIf="!selectedFile" class="upload-placeholder">
+                  <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                  <div class="upload-text">
+                    <p class="primary-text">Glissez-déposez votre fichier ici</p>
+                    <p class="secondary-text">ou cliquez pour parcourir</p>
+                    <p class="info-text">
+                      Formats acceptés : PDF, JPEG, PNG, DOC, DOCX (maximum {{ formatFileSize(10 * 1024 * 1024) }})
+                    </p>
+                  </div>
+                </div>
+
+                <div *ngIf="selectedFile" class="file-selected">
+                  <mat-icon class="file-icon">description</mat-icon>
+                  <div class="file-info">
+                    <p class="file-name">{{ selectedFile.name }}</p>
+                    <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
+                  </div>
+                  <button type="button"
+                          mat-icon-button
+                          (click)="resetForm(); $event.stopPropagation()"
+                          [disabled]="isUploading">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input file caché -->
+              <input #fileInput
+                     type="file"
+                     style="display: none;"
+                     [accept]="getAcceptedTypes()"
+                     (change)="onFileChange($event)">
+
+              <div *ngIf="form.get('file')?.invalid && form.get('file')?.touched"
+                   class="error-message">
+                Veuillez sélectionner un fichier valide
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button type="button"
+                      mat-stroked-button
+                      (click)="resetForm()"
+                      [disabled]="isUploading">
+                <mat-icon>clear</mat-icon>
+                Annuler
+              </button>
+
+              <button type="submit"
+                      mat-raised-button
+                      color="primary"
+                      [disabled]="!form.valid || !selectedFile || isUploading">
+                <mat-progress-spinner *ngIf="isUploading"
+                                      diameter="20"
+                                      class="loading-spinner">
+                </mat-progress-spinner>
+                <mat-icon *ngIf="!isUploading">send</mat-icon>
+                {{ isUploading ? 'Envoi en cours...' : 'Envoyer le document' }}
+              </button>
+            </div>
+
+          </form>
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Messages d'information -->
+    <mat-card class="info-card">
+      <mat-card-content>
+        <div class="info-section">
+          <mat-icon class="info-icon">info</mat-icon>
+          <div class="info-content">
+            <h6 class="info-title">Informations importantes</h6>
+            <ul class="info-list">
+              <li>Les documents sont vérifiés par l'administration avant validation</li>
+              <li>Vous recevrez une notification une fois le document traité</li>
+              <li>Assurez-vous que le document est lisible et complet</li>
+              <li>Format PDF recommandé pour une meilleure qualité</li>
+              <li>En cas de rejet, vous pouvez renvoyer une version corrigée</li>
+            </ul>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
 </div>

@@ -16,5 +16,17 @@ export interface Formation {
   dossiers?: Dossier[];
   listeDocumentsObligatoires?: ListeDocumentsObligatoires[];
   titre?: string; // si calculé côté back
-  // listeDocumentsObligatoiresSimple?: TypeDocument[]; // si renvoyé par un getter/JsonView
+}
+
+export interface FormationAvecStatut {
+  id: number;
+  nom: string;
+  description?: string;
+  pourcentageCompletion: number;
+  documentsRequis: TypeDocument[];
+  documentsUploades: TypeDocument[];
+  statutDossier: 'INCOMPLET' | 'COMPLET' | 'EN_VALIDATION' | 'VALIDE';
+  nombreDocumentsRequis: number;
+  nombreDocumentsUploades: number;
+  nombreDocumentsManquants: number;
 }

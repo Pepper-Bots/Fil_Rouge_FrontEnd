@@ -10,78 +10,94 @@ import { DashboardStagiaireComponent } from './pages/dashboard-stagiaire/dashboa
 import { DashboardAdminComponent } from './pages/dashboard-admin/dashboard-admin.component';
 import { connecteGuard } from './services/connecte.guard';
 import { EditDossierComponent } from './pages/edit-dossier/edit-dossier.component';
-import {DocumentValidationComponent} from './pages/document-validation/document-validation.component';
-import {DocumentUploadComponent} from './pages/document-upload/document-upload.component';
+import { DocumentValidationComponent } from './pages/document-validation/document-validation.component';
+import { DocumentUploadComponent } from './pages/document-upload/document-upload.component';
+import { adminGuard } from './guards/admin.guard';
+
+// Import du nouveau layout et guard
+import { AuthenticatedLayoutComponent } from './layouts/authenticated-layout/authenticated-layout.component';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   // Route racine - redirige vers preconnexion
   { path: '', redirectTo: '/preconnexion', pathMatch: 'full' },
 
-  // Pages publiques (sans guard)
+  // Pages publiques (sans guard ni layout)
   { path: 'preconnexion', component: PreconnexionComponent },
   { path: 'connexion', component: ConnexionComponent },
   { path: 'inscription', component: PreconnexionComponent },
 
-  // Pages protégées par le guard
+  // === ROUTES AVEC LAYOUT AUTHENTIFIÉ === //
   {
-    path: 'accueil',
-    component: AccueilComponent,
-    canActivate: [connecteGuard]
-  },
-  {
-    path: 'dashboard-stagiaire',
-    component: DashboardStagiaireComponent,
-    canActivate: [connecteGuard]
-  },
+    path: '',
+    component: AuthenticatedLayoutComponent,
+    canActivate: [AuthGuard], // ou connecteGuard selon votre préférence
+    children: [
+      // Pages communes à tous les utilisateurs connectés
+      {
+        path: 'accueil',
+        component: AccueilComponent
+      },
 
-  {
-    path: 'dashboard-admin',
-    component: DashboardAdminComponent,
-    canActivate: [connecteGuard]
-  },
+      // === ROUTES STAGIAIRES === //
+      {
+        path: 'dashboard-stagiaire',
+        component: DashboardStagiaireComponent
+      },
+      {
+        path: 'document-upload',
+        component: DocumentUploadComponent  // Permet aux stagiaires d'envoyer leurs documents requis
+      },
 
-  // Routes pour la feature Document
-  {
-    path: 'document-upload',
-    component: DocumentUploadComponent,
-    canActivate: [connecteGuard]
-  },
-  {
-    path: 'document-validation',
-    component: DocumentValidationComponent,
-    canActivate: [connecteGuard]
-  },
+      // === ROUTES ADMIN SEULEMENT === //
+      {
+        path: 'dashboard-admin',
+        component: DashboardAdminComponent,
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'document-validation',
+        component: DocumentValidationComponent,
+        canActivate: [adminGuard]
+      },
 
-  // Routes pour les Dossiers
-  {
-    path: 'dossiers',
-    component: DossiersListComponent,
-    canActivate: [connecteGuard]
-  },
-  {
-    path: 'dossiers/nouveau',
-    component: EditDossierComponent,
-    canActivate: [connecteGuard]
-  },
-  {
-    path: 'dossiers/:id',
-    component: EditDossierComponent,
-    canActivate: [connecteGuard]
-  },
-  {
-    path: 'dossier/:id',
-    component: DossierDetailComponent,
-    canActivate: [connecteGuard]
-  },
+      // Routes pour les Dossiers (accessible selon les droits)
+      {
+        path: 'dossiers',
+        component: DossiersListComponent // Peut être accessible aux deux rôles
+      },
+      {
+        path: 'dossiers/nouveau',
+        component: EditDossierComponent,
+        canActivate: [adminGuard]  // ✅ SÉCURISÉ : Création réservée aux admins
+      },
+      {
+        path: 'dossiers/:id',
+        component: EditDossierComponent,
+        canActivate: [adminGuard] // ✅ SÉCURISÉ : Édition réservée aux admins
+      },
+      {
+        path: 'dossier/:id',
+        component: DossierDetailComponent // Consultation possible pour tous
+      },
 
-  // Autres routes protégées
-  {
-    path: 'ajout-dossier',
-    component: EditStagiaireComponent,
-    canActivate: [connecteGuard]
+      // Autres routes administratives
+      {
+        path: 'ajout-dossier',
+        component: EditStagiaireComponent,
+        canActivate: [adminGuard]  // ✅ SÉCURISÉ : Admin uniquement
+      },
+
+      // === ROUTES SUPER ADMIN === //
+      // Exemple : gestion des utilisateurs, paramètres système, etc.
+      // {
+      //   path: 'admin/users',
+      //   component: UserManagementComponent,
+      //   canActivate: [superAdminGuard]  // ✅ SÉCURISÉ : Super Admin uniquement
+      // },
+    ]
   },
 
   // Route 404 - DOIT ÊTRE EN DERNIER
   { path: '**', component: Page404Component }
-
 ];

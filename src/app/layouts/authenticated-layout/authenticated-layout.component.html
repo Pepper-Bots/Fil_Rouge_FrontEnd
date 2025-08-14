@@ -1,0 +1,87 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <div class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <h2>NovaTech Academy</h2>
+      <p class="user-welcome" *ngIf="userFullName">
+        Bonjour, {{ userFullName }}
+      </p>
+    </div>
+
+    <nav class="sidebar-menu">
+      <!-- Menu Stagiaire -->
+      <ng-container *ngIf="isStagiaire()">
+        <a routerLink="/dashboard-stagiaire" class="menu-item" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon>
+          <span>Tableau de bord</span>
+        </a>
+        <a routerLink="/document-upload" class="menu-item" routerLinkActive="active">
+          <mat-icon>cloud_upload</mat-icon>
+          <span>Mes documents</span>
+        </a>
+        <a routerLink="/dossiers" class="menu-item" routerLinkActive="active">
+          <mat-icon>folder</mat-icon>
+          <span>Mon dossier</span>
+        </a>
+        <a routerLink="/accueil" class="menu-item" routerLinkActive="active">
+          <mat-icon>home</mat-icon>
+          <span>Accueil</span>
+        </a>
+      </ng-container>
+
+      <!-- Menu Admin -->
+      <ng-container *ngIf="isAdmin()">
+        <a routerLink="/dashboard-admin" class="menu-item" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon>
+          <span>Tableau de bord</span>
+        </a>
+        <a routerLink="/document-validation" class="menu-item" routerLinkActive="active">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <span>Validation documents</span>
+        </a>
+        <a routerLink="/dossiers" class="menu-item" routerLinkActive="active">
+          <mat-icon>folder_shared</mat-icon>
+          <span>Gestion dossiers</span>
+        </a>
+        <a routerLink="/ajout-dossier" class="menu-item" routerLinkActive="active">
+          <mat-icon>person_add</mat-icon>
+          <span>Ajouter stagiaire</span>
+        </a>
+        <!-- Menu supplémentaire pour Super Admin -->
+        <ng-container *ngIf="isSuperAdmin()">
+          <a routerLink="/admin/formations" class="menu-item" routerLinkActive="active">
+            <mat-icon>school</mat-icon>
+            <span>Gestion formations</span>
+          </a>
+          <a routerLink="/admin/users" class="menu-item" routerLinkActive="active">
+            <mat-icon>people</mat-icon>
+            <span>Gestion utilisateurs</span>
+          </a>
+        </ng-container>
+      </ng-container>
+
+      <!-- Menu commun -->
+      <div class="menu-divider"></div>
+      <a routerLink="/accueil" class="menu-item" routerLinkActive="active">
+        <mat-icon>home</mat-icon>
+        <span>Accueil</span>
+      </a>
+      <a (click)="logout()" class="menu-item logout">
+        <mat-icon>logout</mat-icon>
+        <span>Déconnexion</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Toggle button -->
+  <button mat-fab class="sidebar-toggle" (click)="toggleSidebar()">
+    <mat-icon>{{ sidebarCollapsed ? 'menu' : 'close' }}</mat-icon>
+  </button>
+
+  <!-- Main content -->
+  <div class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <div class="content-container">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

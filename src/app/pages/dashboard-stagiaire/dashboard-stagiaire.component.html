@@ -1,36 +1,142 @@
-<!--Dashboard Stagiaire :
+<!-- Inspiré de vos maquettes -->
+<div class="dashboard-container">
 
-📤 Envoi de nouveaux documents
-📋 Historique des documents envoyés
-📊 Statut des documents (en attente, validé, rejeté)
-📝 Formulaires de soumission-->
-
-<div class="dashboard-container" style="background-color: #013662; height: 100vh; display:flex;">
-  <!-- Contenu principal -->
-  <div class="main-content">
-
-<h1>Bienvenue sur votre dashboard</h1>
-
-<!--    <div style="background-color: lightcoral; height: 200px;">-->
-<!--      Test couleur-->
-<!--    </div>-->
-
-    <!-- Autres contenus du dashboard ici -->
-    <p>Ici tu peux ajouter tes widgets, infos, etc.</p>
+  <!-- Header principal -->
+  <div class="dashboard-header">
+    <h1>Bienvenue sur votre compte</h1>
+    <p>Gérez votre formation et vos documents</p>
   </div>
 
-  <!-- Bande latérale (fermée ou ouverte) -->
-  <div class="side-panel" [class.open]="isPanelOpen">
-    <!-- Bouton toggle, icône hamburger / croix -->
-    <button class="toggle-button" (click)="togglePanel()" aria-label="Toggle panneau déclaration">
-      <!-- Icône X ou ≡ selon état -->
-      {{ isPanelOpen ? '✕' : '☰' }}
-    </button>
+  <!-- Grid des actions principales -->
+  <div class="dashboard-grid">
 
-    <div class="form-container" *ngIf="isPanelOpen">
+    <!-- Mes absences & retards -->
+    <mat-card class="dashboard-card green-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">event_busy</mat-icon>
+          <div class="card-info">
+            <h3>Mes absences & retards</h3>
+            <p>1 retard à justifier</p>
+          </div>
+          <button mat-icon-button class="card-action" (click)="togglePanel()">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-<!-- Intégration du composant déclaration d'événement -->
-<app-evenement-declaration></app-evenement-declaration>
+    <!-- Notifications -->
+    <mat-card class="dashboard-card orange-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">notifications</mat-icon>
+          <div class="card-info">
+            <h3>Notifications</h3>
+            <p>Vous avez 3 notifications</p>
+          </div>
+          <button mat-icon-button class="card-action">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 🔥 NOUVEAU: Mes documents -->
+    <mat-card class="dashboard-card purple-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">description</mat-icon>
+          <div class="card-info">
+            <h3>Mes documents</h3>
+            <p>Dossier à compléter</p>
+          </div>
+          <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- État du dossier -->
+    <mat-card class="dashboard-card blue-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">folder</mat-icon>
+          <div class="card-info">
+            <h3>État du dossier</h3>
+            <p>Il manque 1 document à votre dossier</p>
+          </div>
+          <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Prochains cours -->
+    <mat-card class="dashboard-card yellow-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">schedule</mat-icon>
+          <div class="card-info">
+            <h3>Prochains cours</h3>
+            <p>Réseaux / UX</p>
+          </div>
+          <button mat-icon-button class="card-action">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Contacts utiles -->
+    <mat-card class="dashboard-card red-card">
+      <mat-card-content>
+        <div class="card-content">
+          <mat-icon class="card-icon">contact_phone</mat-icon>
+          <div class="card-info">
+            <h3>Contacts utiles</h3>
+            <p>N° administration: ####</p>
+          </div>
+          <button mat-icon-button class="card-action">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+  <!-- Actions rapides pour les documents -->
+  <div class="quick-actions">
+    <h2>Actions rapides</h2>
+    <div class="actions-grid">
+
+      <button mat-raised-button color="primary" (click)="navigateToDocumentUpload()" class="action-btn">
+        <mat-icon>cloud_upload</mat-icon>
+        Envoyer un document
+      </button>
+
+      <button mat-stroked-button color="primary" (click)="navigateToMyDocuments()" class="action-btn">
+        <mat-icon>folder_open</mat-icon>
+        Voir mes documents
+      </button>
+
+      <button mat-stroked-button (click)="navigateToProfile()" class="action-btn">
+        <mat-icon>person</mat-icon>
+        Mon profil
+      </button>
+
     </div>
   </div>
+
+  <!-- Panel latéral pour déclaration d'événement -->
+  <div class="side-panel" [class.open]="isPanelOpen">
+    <app-evenement-declaration></app-evenement-declaration>
+  </div>
+
+  <!-- Overlay pour fermer le panel -->
+  <div class="panel-overlay" [class.active]="isPanelOpen" (click)="togglePanel()"></div>
+
 </div>

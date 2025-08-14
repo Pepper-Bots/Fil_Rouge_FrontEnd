@@ -1,14 +1,47 @@
 // src/app/services/crud/document.service.ts
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 import {TypeDocument} from '../../models/type-document.enum';
 import { Document } from '../../models/document';
+import { Formation} from '../../models/formation';
+import { environment } from '../../../environments/environment';
 
 export interface DocumentValidation {
   Statut: string; // 'VALIDÉ' | 'REFUSÉ'
   Commentaire?: string;
+}
+
+export interface StatutDossierFormation {
+  id: number;
+  nom: string;
+  description: string;
+  pourcentageCompletion: number;
+  documentsRequis: TypeDocument[];
+  documentsUploades: TypeDocument[];
+  statutDossier: string; // 'INCOMPLET', 'COMPLET', 'EN_VALIDATION', 'VALIDE'
+  nombreDocumentsRequis: number;
+  nombreDocumentsUploades: number;
+  nombreDocumentsManquants: number;
+}
+
+// Garder DocumentRequis mais simplifier :
+export interface DocumentRequis {
+  typeDocument: TypeDocument;
+  obligatoire: boolean;
+  transmis: boolean;
+  statut: string; // 'VALIDÉ', 'EN_ATTENTE', 'REFUSÉ', 'MANQUANT'
+  commentaire?: string;
+  fichier?: string;
+  dateDepot?: string;
+}
+
+// Simplifier DossierStatut :
+export interface DossierStatut {
+  pourcentageCompletion: number;
+  statut: string;
+  documentsRequis: DocumentRequis[];
 }
 
 @Injectable({
@@ -16,69 +49,496 @@ export interface DocumentValidation {
 })
 export class DocumentService {
 
+  private readonly API_BASE_URL = environment.serverUrl + 'api';
+
   constructor(private http: HttpClient) {}
 
-  /**
-   * Upload d'un document (votre méthode existante + améliorations)
-   */
-  uploadDocument(type: string, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('type', type);
-    formData.append('file', file);
+  // ==================== DONNÉES MOCK POUR DÉVELOPPEMENT ====================
 
-    return this.http.post('/api/documents', formData);
+  private getMockFormations(): Formation[] {
+    return [
+      {
+        id: 1,
+        nom: 'Concepteur Développeur d\'Applications',
+        description: 'Formation intensive de 6 mois en développement web et mobile'
+      },
+      {
+        id: 2,
+        nom: 'Technicien Supérieur Systèmes et Réseaux',
+        description: 'Formation en administration systèmes et réseaux'
+      },
+      {
+        id: 3,
+        nom: 'Designer UX/UI',
+        description: 'Formation en conception d\'interfaces utilisateur'
+      }
+    ];
+  }
+
+  private getMockDocumentsRequis(): DocumentRequis[] {
+    return [
+      {
+        typeDocument: TypeDocument.CV,
+        obligatoire: true,
+        transmis: true,
+        statut: 'VALIDE'
+      },
+      {
+        typeDocument: TypeDocument.PIECE_IDENTITE,
+        obligatoire: true,
+        transmis: true,
+        statut: 'EN_ATTENTE'
+      },
+      {
+        typeDocument: TypeDocument.DIPLOME_BAC,
+        obligatoire: true,
+        transmis: false,
+        statut: 'MANQUANT'
+      },
+      {
+        typeDocument: TypeDocument.LETTRE_MOTIVATION,
+        obligatoire: false,
+        transmis: true,
+        statut: 'VALIDE'
+      }
+    ];
+  }
+
+  private getMockStatutDossierFormation(): StatutDossierFormation {
+    return {
+      id: 1,
+      nom: 'Concepteur Développeur d\'Applications',
+      description: 'Formation intensive de 6 mois',
+      pourcentageCompletion: 67,
+      documentsRequis: [TypeDocument.CV, TypeDocument.PIECE_IDENTITE, TypeDocument.DIPLOME_BAC],
+      documentsUploades: [TypeDocument.CV, TypeDocument.PIECE_IDENTITE],
+      statutDossier: 'EN_VALIDATION',
+      nombreDocumentsRequis: 3,
+      nombreDocumentsUploades: 2,
+      nombreDocumentsManquants: 1
+    };
+  }
+
+  // ✅ Mock pour formations avec statut
+  private getMockFormationsAvecStatut(): StatutDossierFormation[] {
+    // Liste des formations où le stagiaire est INSCRIT (a un dossier)
+    const formationsInscrites = [1, 10]; // IDs des formations où le stagiaire 5 est inscrit
+
+    return [
+      // 🟢 FORMATIONS AVEC INSCRIPTION (pourcentage visible)
+      {
+        id: 1,
+        nom: 'Développement Web Front-End',
+        description: 'Apprendre HTML, CSS, JavaScript et React.',
+        pourcentageCompletion: 67,
+        documentsRequis: [TypeDocument.CV, TypeDocument.LETTRE_MOTIVATION, TypeDocument.PORTFOLIO],
+        documentsUploades: [TypeDocument.CV, TypeDocument.LETTRE_MOTIVATION],
+        statutDossier: 'EN_VALIDATION',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 2,
+        nombreDocumentsManquants: 1
+      },
+      {
+        id: 10,
+        nom: 'Initiation à la cybersécurité',
+        description: 'Panorama des menaces et bonnes pratiques en entreprise.',
+        pourcentageCompletion: 50,
+        documentsRequis: [TypeDocument.CV, TypeDocument.PIECE_IDENTITE],
+        documentsUploades: [TypeDocument.CV],
+        statutDossier: 'INCOMPLET',
+        nombreDocumentsRequis: 2,
+        nombreDocumentsUploades: 1,
+        nombreDocumentsManquants: 1
+      },
+
+      // 🔵 FORMATIONS DISPONIBLES (pas d'inscription = pourcentage à 0)
+      {
+        id: 2,
+        nom: 'Développement Web Back-End',
+        description: 'Apprentissage de Node.js, Express et bases de données.',
+        pourcentageCompletion: 0, // ← Pas inscrit = 0%
+        documentsRequis: [TypeDocument.CV, TypeDocument.DIPLOME_BAC, TypeDocument.PIECE_IDENTITE],
+        documentsUploades: [], // ← Aucun document uploadé
+        statutDossier: 'NON_INSCRIT', // ← Nouveau statut
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 3,
+        nom: 'Full Stack Web',
+        description: 'Formation complète front-end et back-end avec projets pratiques.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.CV, TypeDocument.LETTRE_MOTIVATION, TypeDocument.DIPLOME_BAC_2, TypeDocument.PORTFOLIO],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 4,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 4
+      },
+      {
+        id: 4,
+        nom: 'Sécurité Réseaux',
+        description: 'Introduction à la sécurité des réseaux informatiques.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.PIECE_IDENTITE, TypeDocument.DIPLOME_BAC, TypeDocument.ATTEST_RESP_CIVILE],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 5,
+        nom: 'Pentesting - Tests d\'intrusion',
+        description: 'Découverte des techniques d\'intrusion et d\'audit.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.CV, TypeDocument.JUSTIF_SITUATION, TypeDocument.DIPLOME_BAC_3],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 6,
+        nom: 'Développement Web avec Java Spring',
+        description: 'Conception d\'applications web sécurisées avec Spring Boot.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.CV, TypeDocument.DIPLOME_BAC_2, TypeDocument.PORTFOLIO],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 7,
+        nom: 'Cyberdéfense et SOC',
+        description: 'Mise en place d\'un centre opérationnel de sécurité.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.PIECE_IDENTITE, TypeDocument.CV, TypeDocument.ATTEST_RESP_CIVILE],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 8,
+        nom: 'Développement Web avec PHP et Laravel',
+        description: 'Projet web avec PHP, MySQL et le framework Laravel.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.CV, TypeDocument.LETTRE_MOTIVATION, TypeDocument.PORTFOLIO],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      },
+      {
+        id: 9,
+        nom: 'Sécurité des Applications Web',
+        description: 'Protection des applis web contre les vulnérabilités courantes.',
+        pourcentageCompletion: 0,
+        documentsRequis: [TypeDocument.CV, TypeDocument.JUSTIFICATIF, TypeDocument.ATTEST_RESP_CIVILE],
+        documentsUploades: [],
+        statutDossier: 'NON_INSCRIT',
+        nombreDocumentsRequis: 3,
+        nombreDocumentsUploades: 0,
+        nombreDocumentsManquants: 3
+      }
+    ];
+  }
+
+  private getMockDossierStatut(): DossierStatut {
+    const documentsRequis = this.getMockDocumentsRequis();
+    const totalRequis = documentsRequis.filter(d => d.obligatoire).length;
+    const totalUploades = documentsRequis.filter(d => d.obligatoire && d.transmis).length;
+    const pourcentage = Math.round((totalUploades / totalRequis) * 100);
+
+    return {
+      pourcentageCompletion: pourcentage,
+      documentsRequis: documentsRequis,
+      statut: pourcentage === 100 ? 'COMPLET' : 'INCOMPLET'
+    };
+  }
+
+  private getMockDocumentsEnAttente(): Document[] {
+    return [
+      {
+        id: 1,
+        type: TypeDocument.CV,
+        nomFichier: 'CV_Marie_Dupont.pdf',
+        stagiaire: {
+          id: 101,
+          firstName: 'Marie',
+          lastName: 'Dupont',
+          email: 'marie.dupont@test.com',
+          enabled: true,
+          nomRole: 'STAGIAIRE'
+        },
+        statut: {
+          id: 1,
+          nom: 'EN_ATTENTE'
+        },
+        dateDepot: '2024-12-01T10:30:00',
+        commentaire: ''
+      },
+      {
+        id: 2,
+        type: TypeDocument.PIECE_IDENTITE,
+        nomFichier: 'CNI_Pierre_Martin.jpg',
+        stagiaire: {
+          id: 102,
+          firstName: 'Pierre',
+          lastName: 'Martin',
+          email: 'pierre.martin@test.com',
+          enabled: true,
+          nomRole: 'STAGIAIRE'
+        },
+        statut: {
+          id: 1,
+          nom: 'EN_ATTENTE'
+        },
+        dateDepot: '2024-11-30T14:15:00',
+        commentaire:''
+      }
+    ];
+  }
+
+  // ==================== MÉTHODES PRINCIPALES ====================
+
+  /**
+   * Headers HTTP avec authentification
+   */
+  private getHttpHeaders(includeContentType = true): HttpHeaders {
+    const token = localStorage.getItem('jwt');
+    const headers: any = {
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+
+    if (includeContentType) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    return new HttpHeaders(headers);
   }
 
   /**
-   * Upload pour un dossier spécifique
+   * Récupérer toutes les formations disponibles
    */
-  uploadDocumentForDossier(dossierId: number, file:File, type: TypeDocument): Observable<any> {
+  getFormations(): Observable<Formation[]> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Formations simulées');
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next(this.getMockFormations());
+          observer.complete();
+        }, 500);
+      });
+    }
+
+    // Mode production
+    return this.http.get<Formation[]>(`${this.API_BASE_URL}/formation/formations`, {
+      headers: this.getHttpHeaders()
+    });
+  }
+
+  /**
+   * Récupérer les formations d'un stagiaire spécifique
+   */
+  getFormationsByStagiaire(userId: number): Observable<Formation[]> {
+    return this.http.get<Formation[]>(`${this.API_BASE_URL}/documents/stagiaire/${userId}/formations`, {
+      headers: this.getHttpHeaders()
+    });
+  }
+
+  /**
+   * Récupérer les documents requis pour une formation
+   */
+  getDocumentsRequisFormation(formationId: number): Observable<TypeDocument[]> {
+    return this.http.get<TypeDocument[]>(`${this.API_BASE_URL}/documents/formation/${formationId}/documents-requis`, {
+      headers: this.getHttpHeaders()
+    });
+  }
+
+  /**
+   * Récupérer le statut du dossier d'un stagiaire pour une formation donnée
+   */
+  getStatutDossierFormation(formationId: number, stagiaireId: number): Observable<StatutDossierFormation> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Statut dossier formation simulé', { formationId, stagiaireId });
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next(this.getMockStatutDossierFormation());
+          observer.complete();
+        }, 700);
+      });
+    }
+
+    // Mode production
+    return this.http.get<StatutDossierFormation>(`${this.API_BASE_URL}/documents/formation/${formationId}/statut/${stagiaireId}`, {
+      headers: this.getHttpHeaders()
+    });
+  }
+
+  /**
+   * Upload d'un document pour une formation spécifique
+   */
+  uploadDocumentForFormation(formationId: number, userId: number, file: File, type: TypeDocument): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    formData.append('userId', userId.toString());
+
+    return this.http.post(`${this.API_BASE_URL}/documents/formations/${formationId}/upload`, formData, {
+      headers: this.getHttpHeaders(false) // Pas de Content-Type pour FormData
+    });
+  }
+
+
+  /**
+   * Upload d'un document pour un dossier spécifique
+   */
+  uploadDocumentForDossier(dossierId: number, file: File, type: TypeDocument): Observable<any> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Upload simulé', { dossierId, type, fileName: file.name });
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next({
+            success: true,
+            message: 'Document uploadé avec succès',
+            documentId: Date.now()
+          });
+          observer.complete();
+        }, 1500);
+      });
+    }
+
+    // Mode production
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
 
-    return this.http.post(`/api/documents/dossier/${dossierId}/upload`, formData);
+    return this.http.post(`${this.API_BASE_URL}/documents/dossier/${dossierId}/upload`, formData, {
+      headers: this.getHttpHeaders(false)
+    });
+  }
+
+  /**
+   * Récupérer toutes les formations avec statut
+   */
+  getFormationsAvecStatutDocuments(stagiaireId: number): Observable<StatutDossierFormation[]> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Formations avec statut simulées pour stagiaire', stagiaireId);
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next(this.getMockFormationsAvecStatut()); // Array de formations
+          observer.complete();
+        }, 800);
+      });
+    }
+
+    // Mode production - utilise ton nouvel endpoint
+    return this.http.get<StatutDossierFormation[]>(`${this.API_BASE_URL}/documents/stagiaire/${stagiaireId}/formations-avec-statut`, {
+      headers: this.getHttpHeaders()
+    });
   }
 
   /**
    * Documents en attente de validation (admin)
    */
   getDocumentsEnAttente(): Observable<Document[]> {
-    return this.http.get<Document[]>(`/api/documents/en-attente`);
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Documents en attente simulés');
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next(this.getMockDocumentsEnAttente());
+          observer.complete();
+        }, 600);
+      });
+    }
+
+    // Mode production
+    return this.http.get<Document[]>(`${this.API_BASE_URL}/documents/en-attente`, {
+      headers: this.getHttpHeaders()
+    });
   }
 
   /**
    * Validation d'un document (admin)
    */
   validerDocument(documentId: number, validation: DocumentValidation): Observable<any> {
-    return this.http.put(`/api/documents/valider/${documentId}`, validation);
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Validation simulée', { documentId, validation });
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next({
+            success: true,
+            message: `Document ${validation.Statut.toLowerCase()} avec succès`
+          });
+          observer.complete();
+        }, 1000);
+      });
+    }
+
+    // Mode production
+    return this.http.put(`${this.API_BASE_URL}/documents/valider/${documentId}`, validation, {
+      headers: this.getHttpHeaders()
+    });
+  }
+
+  /**
+   * Téléchargement d'un document
+   */
+  downloadDocument(documentId: number): Observable<Blob> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Téléchargement simulé', documentId);
+      const mockContent = 'Contenu du document simulé';
+      const blob = new Blob([mockContent], { type: 'application/pdf' });
+      return of(blob);
+    }
+
+    // Mode production
+    return this.http.get(`${this.API_BASE_URL}/documents/download/${documentId}`, {
+      headers: this.getHttpHeaders(false),
+      responseType: 'blob'
+    });
   }
 
   /**
    * Suppression d'un document
    */
   deleteDocument(documentId: number): Observable<any> {
-    return this.http.delete(`/api/documents/${documentId}`);
-  }
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Suppression simulée', documentId);
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next({ success: true });
+          observer.complete();
+        }, 500);
+      });
+    }
 
-  /**
-   * Téléchargement d'un document
-   */
-  downloadDocument(documentId: number): Observable<Blob> { // todo Blob ?
-    return this.http.get(`/api/documents/download/${documentId}`, {
-      responseType: 'blob'
+    // Mode production
+    return this.http.delete(`${this.API_BASE_URL}/documents/${documentId}`, {
+      headers: this.getHttpHeaders()
     });
   }
 
-  /**
-   * Formations d'un stagiaire
-   */
-  getFormationByStagiaire(stagiaireId: number): Observable<any[]> {
-    return this.http.get<any[]>(`/api/formation/stagiaire/${stagiaireId}/formations`);
-  }
+  // ==================== MÉTHODES UTILITAIRES ====================
 
   /**
-   * Utilitaires pour l'UI
+   * Nom d'affichage pour les types de documents
    */
   getTypeDisplayName(type: TypeDocument): string {
     const displayNames: { [key in TypeDocument]: string } = {
@@ -99,9 +559,11 @@ export class DocumentService {
 
   getStatusColor(status: string): string {
     switch (status) {
-      case 'VALIDÉ': return 'text-green-600';
+      case 'VALIDÉ':
+      case 'VALIDE': return 'text-green-600';
       case 'EN_ATTENTE': return 'text-yellow-600';
-      case 'REFUSÉ': return 'text-red-600';
+      case 'REFUSÉ':
+      case 'REJETE': return 'text-red-600';
       case 'MANQUANT': return 'text-gray-500';
       default: return 'text-gray-500';
     }
@@ -109,11 +571,31 @@ export class DocumentService {
 
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'VALIDÉ': return 'check_circle';
+      case 'VALIDÉ':
+      case 'VALIDE': return 'check_circle';
       case 'EN_ATTENTE': return 'schedule';
-      case 'REFUSÉ': return 'cancel';
+      case 'REFUSÉ':
+      case 'REJETE': return 'cancel';
       case 'MANQUANT': return 'error_outline';
       default: return 'help_outline';
     }
+  }
+
+  /**
+   * Upload d'un document simple (rétrocompatibilité)
+   */
+  uploadDocument(type: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('type', type);
+    formData.append('file', file);
+
+    return this.http.post(`${this.API_BASE_URL}/documents`, formData);
+  }
+
+  /**
+   * Formations d'un stagiaire (alias pour rétrocompatibilité)
+   */
+  getFormationByStagiaire(stagiaireId: number): Observable<Formation[]> {
+    return this.getFormationsByStagiaire(stagiaireId);
   }
 }

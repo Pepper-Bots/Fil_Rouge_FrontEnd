@@ -19,9 +19,11 @@ export interface KpiData {
 export interface InscriptionAttente {
   id: number;
   stagiaireId: number;
-  stagiaireNom: string;
-  stagiairePrenom: string;
-  stagiaireEmail: string;
+  stagiaire: {
+    lastName: string;
+    firstName: string;
+    email: string;
+  };
   formationId: number;
   formationNom: string;
   statutDossier: 'INCOMPLET' | 'COMPLET' | 'EN_COURS' | 'VALIDE';
@@ -39,9 +41,11 @@ export interface DocumentAttente {
   typeFichier: string;
   typeDocument?: 'CV' | 'PIECE_IDENTITE' | 'DIPLOME' | 'JUSTIFICATIF' | 'PHOTO' | 'AUTRE';
   stagiaireId: number;
-  nomStagiaire: string;
-  prenomStagiaire: string; // todo verifier coherence avec models user + stagiaire
-  stagiaireEmail?: string;
+  stagiaire: {
+    lastName: string;
+    firstName: string;
+    email: string;
+  };
   dateDepot: Date;
   statut: 'EN_ATTENTE' | 'EN_COURS' | 'VALIDE' | 'REJETE';
   taille: number;
@@ -82,6 +86,144 @@ export class DashboardService {
   public documentsAttente$ = this.documentsAttenteSubject.asObservable();
 
   constructor(private http: HttpClient) {}
+
+  // ==================== DONNÉES MOCK ====================
+
+  /**
+   * 📊 Données KPI fictives pour développement
+   */
+  private getMockKpis(): KpiData {
+    return {
+      nbStagiaires: 156,
+      nbFormations: 12,
+      nbIntervenants: 8,
+      nbDocsAttente: 23,
+      nbDocsValidation: 7,
+      nbInscriptionsAttente: 15,
+      evolutionStagiaires: 12.5,
+      evolutionFormations: -2.3
+    };
+  }
+
+  /**
+   * 👥 Inscriptions fictives pour développement
+   */
+  private getMockInscriptions(): InscriptionAttente[] {
+    return [
+      {
+        id: 1,
+        stagiaireId: 101,
+        stagiaire: {
+          firstName: 'Marie',
+          lastName: 'Dupont',
+          email: 'marie.dupont@example.com'
+        },
+        formationId: 1,
+        formationNom: 'Développement Web Full Stack',
+        statutDossier: 'INCOMPLET',
+        dateInscription: new Date('2024-12-01'),
+        documentsManquants: ['CV', 'Pièce d\'identité'],
+        documentsDeposes: 2,
+        documentsRequis: 4,
+        priorite: 'HAUTE'
+      },
+      {
+        id: 2,
+        stagiaireId: 102,
+        stagiaire: {
+          firstName: 'Pierre',
+          lastName: 'Martin',
+          email: 'pierre.martin@example.com'
+        },
+        formationId: 2,
+        formationNom: 'Data Science & IA',
+        statutDossier: 'EN_COURS',
+        dateInscription: new Date('2024-11-28'),
+        documentsManquants: ['Diplôme'],
+        documentsDeposes: 3,
+        documentsRequis: 4,
+        priorite: 'NORMALE'
+      },
+      {
+        id: 3,
+        stagiaireId: 103,
+        stagiaire: {
+          firstName: 'Sophie',
+          lastName: 'Bernard',
+          email: 'sophie.bernard@example.com'
+        },
+        formationId: 1,
+        formationNom: 'Développement Web Full Stack',
+        statutDossier: 'COMPLET',
+        dateInscription: new Date('2024-11-25'),
+        documentsManquants: [],
+        documentsDeposes: 4,
+        documentsRequis: 4,
+        priorite: 'BASSE'
+      }
+    ];
+  }
+
+  /**
+   * 📄 Documents fictifs pour développement
+   */
+  private getMockDocuments(): DocumentAttente[] {
+    return [
+      {
+        id: 1,
+        nomFichier: 'cv_marie_dupont.pdf',
+        nomFichierOriginal: 'CV_Marie_DUPONT.pdf',
+        typeFichier: 'application/pdf',
+        typeDocument: 'CV',
+        stagiaireId: 101,
+        stagiaire: {
+          firstName: 'Marie',
+          lastName: 'Dupont',
+          email: 'marie.dupont@example.com'
+        },
+        dateDepot: new Date('2024-12-01'),
+        statut: 'EN_ATTENTE',
+        taille: 245760, // 240 Ko
+        cheminFichier: '/uploads/documents/cv_marie_dupont.pdf'
+      },
+      {
+        id: 2,
+        nomFichier: 'diplome_pierre_martin.pdf',
+        typeFichier: 'application/pdf',
+        typeDocument: 'DIPLOME',
+        stagiaireId: 102,
+        stagiaire: {
+          firstName: 'Pierre',
+          lastName: 'Martin',
+          email: 'pierre.martin@example.com'
+        },
+        dateDepot: new Date('2024-11-30'),
+        statut: 'EN_COURS',
+        taille: 512000, // 500 Ko
+        cheminFichier: '/uploads/documents/diplome_pierre_martin.pdf'
+      },
+      {
+        id: 3,
+        nomFichier: 'piece_identite_sophie.jpg',
+        typeFichier: 'image/jpeg',
+        typeDocument: 'PIECE_IDENTITE',
+        stagiaireId: 103,
+        stagiaire: {
+          firstName: 'Sophie',
+          lastName: 'Bernard',
+          email: 'sophie.bernard@example.com'
+        },
+        dateDepot: new Date('2024-11-29'),
+        statut: 'VALIDE',
+        taille: 1024000, // 1 Mo
+        cheminFichier: '/uploads/documents/piece_identite_sophie.jpg',
+        validePar: 'Admin Test',
+        dateValidation: new Date('2024-11-30')
+      }
+    ];
+  }
+
+  // ==================== MÉTHODES PRINCIPALES ====================
 
   /**
    * Headers HTTP avec authentification
@@ -127,11 +269,30 @@ export class DashboardService {
    * Récupère les indicateurs clés de performance
    */
   getKpis(): Observable<KpiData> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Dashboard: Utilisation des données mock KPIs');
+      return new Observable(observer => {
+        setTimeout(() => {
+          const mockData = this.getMockKpis();
+          this.kpiDataSubject.next(mockData);
+          observer.next(mockData);
+          observer.complete();
+        }, 500);
+      });
+    }
+
+    // Mode production avec fallback mock
     return this.http.get<KpiData>(`${this.API_BASE_URL}/admin/kpis`, {
       headers: this.getHttpHeaders()
     }).pipe(
       tap(data => this.kpiDataSubject.next(data)),
-      catchError(this.handleError('getKpis'))
+      catchError(error => {
+        console.warn('API KPIs indisponible, utilisation des données mock');
+        const mockData = this.getMockKpis();
+        this.kpiDataSubject.next(mockData);
+        return [mockData];
+      })
     );
   }
 
@@ -141,13 +302,122 @@ export class DashboardService {
    * Récupère les inscriptions en attente
    */
   getInscriptionsAttente(limit: number = 10): Observable<InscriptionAttente[]> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Dashboard: Utilisation des données mock Inscriptions');
+      return new Observable(observer => {
+        setTimeout(() => {
+          const mockData = this.getMockInscriptions().slice(0, limit);
+          this.inscriptionsAttenteSubject.next(mockData);
+          observer.next(mockData);
+          observer.complete();
+        }, 700);
+      });
+    }
+    // Mode production avec fallback mock
     return this.http.get<InscriptionAttente[]>(`${this.API_BASE_URL}/admin/inscriptions/attente`, {
       headers: this.getHttpHeaders(),
       params: { limit: limit.toString() }
     }).pipe(
       tap(data => this.inscriptionsAttenteSubject.next(data)),
-      catchError(this.handleError('getInscriptionsAttente'))
+      catchError(error => {
+        console.warn('API Inscriptions indisponible, utilisation des données mock');
+        const mockData = this.getMockInscriptions().slice(0, limit);
+        this.inscriptionsAttenteSubject.next(mockData);
+        return [mockData];
+      })
     );
+  }
+
+  // ==================== DOCUMENTS ====================
+
+
+  /**
+   * Récupère les documents en attente de validation
+   */
+  getDocumentsAttente(limit: number = 15): Observable<DocumentAttente[]> {
+    // 🔥 Mode mock pour développement
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Dashboard: Utilisation des données mock Documents');
+      return new Observable(observer => {
+        setTimeout(() => {
+          const mockData = this.getMockDocuments().slice(0, limit);
+          this.documentsAttenteSubject.next(mockData);
+          observer.next(mockData);
+          observer.complete();
+        }, 600);
+      });
+    }
+
+    // Mode production avec fallback mock
+    return this.http.get<DocumentAttente[]>(`${this.API_BASE_URL}/admin/documents/attente`, {
+      headers: this.getHttpHeaders(),
+      params: { limit: limit.toString() }
+    }).pipe(
+      tap(data => this.documentsAttenteSubject.next(data)),
+      catchError(error => {
+        console.warn('API Documents indisponible, utilisation des données mock');
+        const mockData = this.getMockDocuments().slice(0, limit);
+        this.documentsAttenteSubject.next(mockData);
+        return [mockData];
+      })
+    );
+  }
+
+  // ==================== AUTRES MÉTHODES ====================
+
+
+  /**
+   * Actualise toutes les données du dashboard
+   */
+  rafraichirToutesDonnees(): Observable<any> {
+    return new Observable<boolean>(observer => {
+      let completedRequests = 0;
+      const totalRequests = 3;
+      let hasError = false;
+
+      const checkCompletion = () => {
+        completedRequests++;
+        if (completedRequests === totalRequests) {
+          if (hasError) {
+            observer.error(new Error('Erreurs lors du rafraîchissement'));
+          } else {
+            observer.next(true);
+            observer.complete();
+          }
+        }
+      };
+
+      // Requête 1: KPIs
+      this.getKpis().subscribe({
+        next: (data: KpiData) => checkCompletion(),
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des KPIs:', error);
+          hasError = true;
+          checkCompletion();
+        }
+      });
+
+      // Requête 2: Inscriptions
+      this.getInscriptionsAttente().subscribe({
+        next: (data: InscriptionAttente[]) => checkCompletion(),
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des inscriptions:', error);
+          hasError = true;
+          checkCompletion();
+        }
+      });
+
+      // Requête 3: Documents
+      this.getDocumentsAttente().subscribe({
+        next: (data: DocumentAttente[]) => checkCompletion(),
+        error: (error: any) => {
+          console.error('Erreur lors du rafraîchissement des documents:', error);
+          hasError = true;
+          checkCompletion();
+        }
+      });
+    });
   }
 
   /**
@@ -179,19 +449,6 @@ export class DashboardService {
   }
 
   // ==================== DOCUMENTS ====================
-
-  /**
-   * Récupère les documents en attente de validation
-   */
-  getDocumentsAttente(limit: number = 15): Observable<DocumentAttente[]> {
-    return this.http.get<DocumentAttente[]>(`${this.API_BASE_URL}/admin/documents/attente`, {
-      headers: this.getHttpHeaders(),
-      params: { limit: limit.toString() }
-    }).pipe(
-      tap(data => this.documentsAttenteSubject.next(data)),
-      catchError(this.handleError('getDocumentsAttente'))
-    );
-  }
 
   /**
    * Télécharge un document
@@ -255,76 +512,13 @@ export class DashboardService {
   // ==================== UTILITAIRES ====================
 
   /**
-   * Actualise toutes les données du dashboard
-   */
-  rafraichirToutesDonnees(): Observable<any> {
-    return new Observable<boolean>(observer => {
-      let completedRequests = 0;
-      const totalRequests = 3;
-      let hasError = false;
-
-      // Fonction pour vérifier si toutes les requêtes sont terminées
-      const checkCompletion = () => {
-        completedRequests++;
-        if (completedRequests === totalRequests) {
-          if (hasError) {
-            observer.error(new Error('Erreurs lors du rafraîchissement'));
-          } else {
-            observer.next(true);
-            observer.complete();
-          }
-        }
-      };
-
-      // Requête 1: KPIs
-      this.getKpis().subscribe({
-        next: (data: KpiData) => {
-          // Les données sont automatiquement mises à jour via le BehaviorSubject
-          checkCompletion();
-        },
-        error: (error: any) => {
-          console.error('Erreur lors du rafraîchissement des KPIs:', error);
-          hasError = true;
-          checkCompletion();
-        }
-      });
-
-      // Requête 2: Inscriptions
-      this.getInscriptionsAttente().subscribe({
-        next: (data: InscriptionAttente[]) => {
-          // Les données sont automatiquement mises à jour via le BehaviorSubject
-          checkCompletion();
-        },
-        error: (error: any) => {
-          console.error('Erreur lors du rafraîchissement des inscriptions:', error);
-          hasError = true;
-          checkCompletion();
-        }
-      });
-
-      // Requête 3: Documents
-      this.getDocumentsAttente().subscribe({
-        next: (data: DocumentAttente[]) => {
-          // Les données sont automatiquement mises à jour via le BehaviorSubject
-          checkCompletion();
-        },
-        error: (error: any) => {
-          console.error('Erreur lors du rafraîchissement des documents:', error);
-          hasError = true;
-          checkCompletion();
-        }
-      });
-    });
-  }
-
-  /**
    * Recherche dans les documents
    */
   rechercherDocuments(criteres: {
     nom?: string;
     type?: string;
     statut?: string;
-    stagiaireNom?: string;
+    lastName?: string;
     dateDebut?: Date;
     dateFin?: Date;
   }): Observable<DocumentAttente[]> {
@@ -397,5 +591,6 @@ export class DashboardService {
       catchError(this.handleError('getParametresNotification'))
     );
   }
+
 }
 

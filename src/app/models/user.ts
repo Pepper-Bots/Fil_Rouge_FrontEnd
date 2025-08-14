@@ -6,7 +6,7 @@ export interface User {
   lastName: string;
   firstName: string;
   email: string;
-  password?: string; // Généralement jamais renvoyé par le back
+  password?: string; // todo -> à afficher ici ? Généralement jamais renvoyé par le back
   notifications?: Notification[];
   jetonVerificationEmail?: string;
   nomRole?: string;

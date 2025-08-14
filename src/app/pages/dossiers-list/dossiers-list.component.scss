@@ -1,7 +1,7 @@
 .container {
   padding: 24px 8vw;
   min-height: 90vh;
-  background: linear-gradient(120deg, #f8fafc 0%, #e9ecef 100%);
+  background: linear-gradient(120deg, #013662 0%, #0d4d83 100%);
 }
 
 .header-section {
@@ -14,7 +14,7 @@
     margin: 0;
     font-size: 2rem;
     font-weight: 600;
-    color: #232323;
+    color: #23cc64;
     letter-spacing: 1px;
   }
 }
@@ -29,10 +29,10 @@
 .dossier-card {
   cursor: pointer;
   backdrop-filter: blur(2px);
-  background: rgba(255,255,255,0.95);
+  background: rgb(1, 54, 98);
   border-radius: 18px;
-  box-shadow: 0 2px 10px rgba(100,100,130,0.08);
-  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 10px rgb(35, 204, 100);
+  border: 1px solid #23cc64;
   transition:
     box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
     transform 0.2s cubic-bezier(0.4,0,0.2,1);
