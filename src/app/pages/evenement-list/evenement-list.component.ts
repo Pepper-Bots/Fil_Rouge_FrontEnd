@@ -1,8 +1,11 @@
 import { Component } from '@angular/core';
+import {MatProgressSpinner} from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-evenement-list',
-  imports: [],
+  imports: [
+    MatProgressSpinner
+  ],
   templateUrl: './evenement-list.component.html',
   styleUrl: './evenement-list.component.scss'
 })

@@ -11,7 +11,7 @@
 
   <div class="page-content">
 
-    <!-- Sélecteur de formation -->
+    <!-- 1. Sélecteur de formation -->
     <mat-card>
       <mat-card-header>
         <mat-card-title>
@@ -29,22 +29,16 @@
             <mat-option *ngFor="let formation of formations" [value]="formation">
               <div class="formation-option">
                 <span class="formation-name">{{formation.nom}}</span>
-
-                <!-- Indicateur d'inscription -->
                 <span class="formation-status"
                       [class.inscrit]="formation.statutDossier !== 'NON_INSCRIT'"
                       [class.non-inscrit]="formation.statutDossier === 'NON_INSCRIT'">
-
-          <!-- Si inscrit : afficher le pourcentage -->
-          <span *ngIf="formation.statutDossier !== 'NON_INSCRIT'">
-            ({{formation.pourcentageCompletion}}% complété)
-          </span>
-
-                  <!-- Si non inscrit : afficher "Découvrir" -->
-          <span *ngIf="formation.statutDossier === 'NON_INSCRIT'">
-            (Découvrir cette formation)
-          </span>
-        </span>
+                  <span *ngIf="formation.statutDossier !== 'NON_INSCRIT'">
+                    ({{formation.pourcentageCompletion}}% complété)
+                  </span>
+                  <span *ngIf="formation.statutDossier === 'NON_INSCRIT'">
+                    (Découvrir cette formation)
+                  </span>
+                </span>
               </div>
             </mat-option>
           </mat-select>
@@ -55,7 +49,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Loading state pour les formations -->
+    <!-- 2. Loading state pour les formations -->
     <mat-card *ngIf="isLoadingFormations">
       <mat-card-content>
         <div class="custom-loading">
@@ -65,8 +59,121 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Progression pour la formation sélectionnée -->
-    <mat-card *ngIf="selectedFormation && statutDossierFormation && !isLoadingDossier">
+    <!-- 3. Formation(s) actuelle(s) du stagiaire (quand aucune sélection) -->
+    <mat-card *ngIf="!selectedFormation && !isLoadingFormations">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>school</mat-icon>
+          Votre formation actuelle
+        </mat-card-title>
+        <mat-card-subtitle>
+          Formation(s) en cours et inscriptions précédentes
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+
+        <!-- Formation en cours -->
+        <div *ngFor="let formation of getFormationsInscrites()" class="formation-actuelle">
+          <div class="formation-header">
+            <h4 class="formation-title">{{ formation.nom }}</h4>
+            <span class="formation-badge"
+                  [class.badge-en-cours]="formation.statutDossier === 'COMPLET'"
+                  [class.badge-en-attente]="formation.statutDossier === 'EN_VALIDATION'"
+                  [class.badge-incomplet]="formation.statutDossier === 'INCOMPLET'">
+              {{ getStatutLabel(formation.statutDossier) }}
+            </span>
+          </div>
+
+          <div class="formation-details">
+            <div class="formation-info-grid">
+              <div class="info-item">
+                <mat-icon>schedule</mat-icon>
+                <span>Niveau {{ getNiveauFormationById(formation.id) }} • {{ getDureeFormationById(formation.id) }} mois</span>              </div>
+              <div class="info-item">
+                <mat-icon>assignment</mat-icon>
+                <span>{{ formation.nombreDocumentsUploades }}/{{ formation.nombreDocumentsRequis }} documents envoyés</span>
+              </div>
+              <div class="info-item">
+                <mat-icon>trending_up</mat-icon>
+                <span>{{ formation.pourcentageCompletion }}% de progression</span>
+              </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="progress-bar-container">
+              <mat-progress-bar
+                [value]="formation.pourcentageCompletion"
+                mode="determinate"
+                [color]="formation.pourcentageCompletion === 100 ? 'primary' : 'accent'">
+              </mat-progress-bar>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="formation-actions">
+              <button mat-stroked-button
+                      color="primary"
+                      (click)="selectFormation(formation)">
+                <mat-icon>upload</mat-icon>
+                Envoyer des documents
+              </button>
+              <button mat-stroked-button
+                      color="accent"
+                      (click)="voirDetailsFormation(formation)">
+                <mat-icon>info</mat-icon>
+                Voir les détails
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Si aucune formation inscrite -->
+        <div *ngIf="getFormationsInscrites().length === 0" class="no-formation">
+          <mat-icon>school_outlined</mat-icon>
+          <h4>Aucune formation en cours</h4>
+          <p>Sélectionnez une formation ci-dessus pour commencer votre inscription.</p>
+        </div>
+
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 4. Description de la formation sélectionnée -->
+    <mat-card *ngIf="selectedFormation">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info</mat-icon>
+          À propos de {{selectedFormation.nom}}
+        </mat-card-title>
+        <mat-card-subtitle>
+          Formation niveau {{ getNiveauFormation() }}
+          • {{ getDureeFormation() }} mois (500 heures)
+          •
+          <span [class.text-success]="isInscritToFormation(selectedFormation)"
+                [class.text-info]="!isInscritToFormation(selectedFormation)">
+            {{ isInscritToFormation(selectedFormation) ? 'Vous êtes inscrit' : 'Inscription possible' }}
+          </span>
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="formation-description">
+          <p class="description-text" [innerHTML]="getFormattedDescription()"></p>
+
+          <!-- Informations complémentaires -->
+          <div class="formation-infos">
+            <div class="info-item">
+              <mat-icon>assignment</mat-icon>
+              <span>{{ selectedFormation.nombreDocumentsRequis }} document(s) requis pour l'inscription</span>
+            </div>
+            <div class="info-item" *ngIf="isInscritToFormation(selectedFormation)">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ selectedFormation.nombreDocumentsUploades }} document(s) déjà envoyé(s)</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 5. Progression pour la formation sélectionnée (si inscrit) -->
+    <mat-card *ngIf="selectedFormation && statutDossierFormation && !isLoadingDossier && isInscritToFormation(selectedFormation)">
       <mat-card-header>
         <mat-card-title>
           <mat-icon>assessment</mat-icon>
@@ -94,17 +201,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Loading state pour le dossier -->
-    <mat-card *ngIf="isLoadingDossier">
-      <mat-card-content>
-        <div class="custom-loading">
-          <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-          <p class="loading-text">Chargement des données...</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Documents requis pour la formation sélectionnée -->
+    <!-- 6. Documents requis pour la formation sélectionnée -->
     <mat-card *ngIf="selectedFormation && documentsRequisFormation.length > 0">
       <mat-card-header>
         <mat-card-title>
@@ -131,15 +228,11 @@
                 {{ getStatusIcon(getDocumentStatus(typeDoc)) }}
               </mat-icon>
 
-              <!-- 👍 UN SEUL BLOC document-details (corrigé) -->
               <div class="document-details">
                 <div class="document-name">{{ getTypeDisplayName(typeDoc) }}</div>
-
-                <!-- ✅ Description ajoutée ici -->
                 <div class="document-description">
                   <small class="text-muted">{{ getDocumentDescription(typeDoc) }}</small>
                 </div>
-
                 <div class="document-badges">
                   <span class="badge badge-required">Obligatoire</span>
                   <span *ngIf="getDocumentStatus(typeDoc) !== 'MANQUANT'"
@@ -147,8 +240,8 @@
                         [class.badge-valid]="getDocumentStatus(typeDoc) === 'VALIDE'"
                         [class.badge-pending]="getDocumentStatus(typeDoc) === 'EN_ATTENTE'"
                         [class.badge-error]="getDocumentStatus(typeDoc) === 'REJETE'">
-        {{ getDocumentStatus(typeDoc) }}
-      </span>
+                    {{ getDocumentStatus(typeDoc) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -169,7 +262,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Zone d'upload principal -->
+    <!-- 7. Zone d'upload principal -->
     <mat-card *ngIf="selectedFormation">
       <mat-card-header>
         <mat-card-title>
@@ -280,7 +373,7 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Messages d'information -->
+    <!-- 8. Messages d'information -->
     <mat-card class="info-card">
       <mat-card-content>
         <div class="info-section">

@@ -1,142 +1,241 @@
-<!-- Inspiré de vos maquettes -->
+<!-- Dashboard Stagiaire - Conforme aux maquettes NOVATECH ACADEMY -->
 <div class="dashboard-container">
 
-  <!-- Header principal -->
+  <!-- ==================== HEADER PRINCIPAL ==================== -->
   <div class="dashboard-header">
-    <h1>Bienvenue sur votre compte</h1>
-    <p>Gérez votre formation et vos documents</p>
-  </div>
+    <div class="header-content">
+      <div class="welcome-section">
+        <h1 class="welcome-title">
+          <mat-icon class="academy-icon">school</mat-icon>
+          NOVATECH ACADEMY
+        </h1>
+        @if (profile) {
+          <p class="welcome-subtitle">
+            Bienvenue sur votre compte, {{ profile.firstName }}.
+          </p>
+        } @else if (!isLoading) {
+          <p class="welcome-subtitle">
+            Bienvenue sur votre compte.
+          </p>
+        }
+      </div>
 
-  <!-- Grid des actions principales -->
-  <div class="dashboard-grid">
-
-    <!-- Mes absences & retards -->
-    <mat-card class="dashboard-card green-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">event_busy</mat-icon>
-          <div class="card-info">
-            <h3>Mes absences & retards</h3>
-            <p>1 retard à justifier</p>
-          </div>
-          <button mat-icon-button class="card-action" (click)="togglePanel()">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Notifications -->
-    <mat-card class="dashboard-card orange-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">notifications</mat-icon>
-          <div class="card-info">
-            <h3>Notifications</h3>
-            <p>Vous avez 3 notifications</p>
-          </div>
-          <button mat-icon-button class="card-action">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- 🔥 NOUVEAU: Mes documents -->
-    <mat-card class="dashboard-card purple-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">description</mat-icon>
-          <div class="card-info">
-            <h3>Mes documents</h3>
-            <p>Dossier à compléter</p>
-          </div>
-          <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- État du dossier -->
-    <mat-card class="dashboard-card blue-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">folder</mat-icon>
-          <div class="card-info">
-            <h3>État du dossier</h3>
-            <p>Il manque 1 document à votre dossier</p>
-          </div>
-          <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Prochains cours -->
-    <mat-card class="dashboard-card yellow-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">schedule</mat-icon>
-          <div class="card-info">
-            <h3>Prochains cours</h3>
-            <p>Réseaux / UX</p>
-          </div>
-          <button mat-icon-button class="card-action">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Contacts utiles -->
-    <mat-card class="dashboard-card red-card">
-      <mat-card-content>
-        <div class="card-content">
-          <mat-icon class="card-icon">contact_phone</mat-icon>
-          <div class="card-info">
-            <h3>Contacts utiles</h3>
-            <p>N° administration: ####</p>
-          </div>
-          <button mat-icon-button class="card-action">
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-  </div>
-
-  <!-- Actions rapides pour les documents -->
-  <div class="quick-actions">
-    <h2>Actions rapides</h2>
-    <div class="actions-grid">
-
-      <button mat-raised-button color="primary" (click)="navigateToDocumentUpload()" class="action-btn">
-        <mat-icon>cloud_upload</mat-icon>
-        Envoyer un document
-      </button>
-
-      <button mat-stroked-button color="primary" (click)="navigateToMyDocuments()" class="action-btn">
-        <mat-icon>folder_open</mat-icon>
-        Voir mes documents
-      </button>
-
-      <button mat-stroked-button (click)="navigateToProfile()" class="action-btn">
-        <mat-icon>person</mat-icon>
-        Mon profil
-      </button>
-
+      <!-- Actions rapides header -->
+      <div class="header-actions">
+        <button mat-icon-button class="refresh-btn" (click)="refreshDashboard()" [disabled]="isLoading">
+          <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Panel latéral pour déclaration d'événement -->
+  <!-- ==================== ÉTAT DE CHARGEMENT ==================== -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+      <p>Chargement de vos données...</p>
+    </div>
+  }
+
+  <!-- ==================== CONTENU PRINCIPAL ==================== -->
+  @if (!isLoading) {
+    <div class="dashboard-content">
+
+      <!-- ==================== LAYOUT PRINCIPAL AVEC PROFIL + CARTES ==================== -->
+      <div class="main-layout">
+
+        <!-- PROFIL À GAUCHE -->
+        <div class="profile-section">
+          @if (profile) {
+            <div class="profile-card">
+              <div class="profile-avatar">
+                <mat-icon class="avatar-icon">account_circle</mat-icon>
+              </div>
+              <div class="profile-info">
+                <h2 class="profile-name">{{ profile.firstName }} {{ profile.lastName }}</h2>
+                <p class="profile-role">{{ profile.parcours }}</p>
+                <div class="profile-status" [class]="profile.enCoursDeValidation ? 'status-pending' : 'status-active'">
+                  <mat-icon>
+                    {{ profile.enCoursDeValidation ? 'pending' : 'check_circle' }}
+                  </mat-icon>
+                  <span>
+                    {{ profile.enCoursDeValidation ? 'En cours de validation' : 'Compte actif' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- CARTES À DROITE -->
+        <div class="cards-section">
+          <div class="dashboard-grid">
+
+            <!-- Carte 1: Mes absences & retards -->
+            <div class="dashboard-card" [class.alert-card]="niveauAlerteAbsence === 'critique'">
+              <div class="card-content">
+                <mat-icon class="card-icon">event_busy</mat-icon>
+                <div class="card-info">
+                  <h3>Mes absences & retards</h3>
+                  <p>{{ absenceRetardMessage }}</p>
+                  @if (stats) {
+                    <div class="stats-mini">
+                      <small>{{ stats.totalRetards }}/{{ stats.seuilRetards }} retards</small>
+                      <small>{{ stats.totalAbsences }}/{{ stats.seuilAbsences }}h absences</small>
+                    </div>
+                  }
+                </div>
+                <button mat-icon-button class="card-action" (click)="togglePanel()">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Carte 2: Notifications -->
+            <div class="dashboard-card">
+              <div class="card-content">
+                <mat-icon class="card-icon" [matBadge]="nombreNotificationsNonLues"
+                          [matBadgeHidden]="nombreNotificationsNonLues === 0"
+                          matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+                <div class="card-info">
+                  <h3>Notifications</h3>
+                  @if (nombreNotificationsNonLues > 0) {
+                    <p>
+                      Vous avez {{ nombreNotificationsNonLues }} notification{{ nombreNotificationsNonLues > 1 ? 's' : '' }}
+                    </p>
+                  } @else {
+                    <p>
+                      Aucune nouvelle notification
+                    </p>
+                  }
+                </div>
+                <button mat-icon-button class="card-action">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Carte 3: Vos documents -->
+            <div class="dashboard-card">
+              <div class="card-content">
+                <mat-icon class="card-icon">description</mat-icon>
+                <div class="card-info">
+                  <h3>Vos documents</h3>
+                  @if (dossier) {
+                    <p>{{ dossier.documentsValides }} document{{ dossier.documentsValides > 1 ? 's' : '' }} en attente de validation</p>
+                  } @else {
+                    <p>Chargement du dossier...</p>
+                  }
+                  <!-- Barre de progression -->
+                  @if (dossier) {
+                    <div class="progress-container">
+                      <mat-progress-bar mode="determinate"
+                                        [value]="dossier.progression"
+                                        [class]="progressionDossierClass">
+                      </mat-progress-bar>
+                      <span class="progress-text">{{ dossier.progression }}%</span>
+                    </div>
+                  }
+                </div>
+                <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Carte 4: État du dossier -->
+            <div class="dashboard-card">
+              <div class="card-content">
+                <mat-icon class="card-icon">folder</mat-icon>
+                <div class="card-info">
+                  <h3>État du dossier</h3>
+                  @if (dossier) {
+                    <p>
+                      Il manque {{ dossier.documentsManquants?.length || 1 }} document à votre dossier
+                    </p>
+                  }
+                  @if (dossier) {
+                    <div class="dossier-badges">
+                      <span class="status-badge" [class]="'badge-' + dossier.statutDossier.toLowerCase()">
+                        {{ dossier.statutDossier }}
+                      </span>
+                    </div>
+                  }
+                </div>
+                <button mat-icon-button class="card-action" (click)="navigateToDocumentUpload()">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Carte 5: Prochain cours -->
+            <div class="dashboard-card">
+              <div class="card-content">
+                <mat-icon class="card-icon">schedule</mat-icon>
+                <div class="card-info">
+                  <h3>Prochain cours :</h3>
+                  <p>{{ prochainCoursFormate }}</p>
+                  @if (profile?.formation) {
+                    <div class="formation-info">
+                      <small>{{ formationNomCourt }}</small>
+                      <small>Progression: {{ profile!.formation!.progression }}%</small>
+                    </div>
+                  }
+                </div>
+                <button mat-icon-button class="card-action" (click)="navigateToCalendar()">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Carte 6: Contacts utiles -->
+            <div class="dashboard-card">
+              <div class="card-content">
+                <mat-icon class="card-icon">contact_phone</mat-icon>
+                <div class="card-info">
+                  <h3>Contacts utiles</h3>
+                  <p>N° administration: 03.87.XX.XX.XX</p>
+                  <small>administration&#64;novatech-academy.com</small>
+                </div>
+                <button mat-icon-button class="card-action" (click)="navigateToContacts()">
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ==================== PANNEAU LATÉRAL DROIT ==================== -->
   <div class="side-panel" [class.open]="isPanelOpen">
-    <app-evenement-declaration></app-evenement-declaration>
+    <div class="panel-header">
+      <h3>
+        <mat-icon>add_alert</mat-icon>
+        Déclarer une absence ou un retard
+      </h3>
+      <button mat-icon-button (click)="closePanel()" class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="panel-content">
+      <app-evenement-declaration (evenementDeclare)="onEvenementDeclare($event)">
+      </app-evenement-declaration>
+    </div>
   </div>
 
-  <!-- Overlay pour fermer le panel -->
-  <div class="panel-overlay" [class.active]="isPanelOpen" (click)="togglePanel()"></div>
+  <!-- ==================== OVERLAY POUR FERMER LE PANNEAU ==================== -->
+  <div class="panel-overlay"
+       [class.active]="isPanelOpen"
+       (click)="closePanel()">
+  </div>
 
 </div>
+
+<!-- ==================== BOUTON POUR OUVRIR LA SIDEBAR DROITE ==================== -->
+<button class="panel-toggle" (click)="togglePanel()">
+  <mat-icon>add_alert</mat-icon>
+</button>

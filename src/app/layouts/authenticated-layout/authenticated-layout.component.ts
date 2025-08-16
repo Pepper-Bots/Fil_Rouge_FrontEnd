@@ -64,4 +64,20 @@ export class AuthenticatedLayoutComponent implements OnInit, OnDestroy {
   isSuperAdmin(): boolean {
     return this.currentUserRole === 'SUPER_ADMIN';
   }
+
+  navigateToDashboard(): void {
+    if (this.isStagiaire()) {
+      this.router.navigate(['/dashboard-stagiaire']);
+    } else if (this.isAdmin()) {
+      this.router.navigate(['/dashboard-admin']);
+    }
+  }
+
+  get currentUser() {
+    return this.authService.getCurrentUser();
+  }
+
+  get userRole(): string {
+    return this.authService.getUserRole() || '';
+  }
 }

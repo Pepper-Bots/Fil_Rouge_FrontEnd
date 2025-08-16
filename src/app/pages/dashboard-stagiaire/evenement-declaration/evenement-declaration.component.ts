@@ -1,23 +1,39 @@
-import {Component, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {EvenementService} from '../../../services/crud/evenement.service';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { EvenementService } from '../../../services/crud/evenement.service';
 import { CommonModule } from '@angular/common';
-import {AuthService} from '../../../services/auth.service';
-import {MotifAbsence} from '../../../models/motif-absence';
-import {DocumentEvenement} from '../../../models/document-evenement';
-import {Evenement} from '../../../models/evenement';
+import { AuthService } from '../../../services/auth.service';
+import { MotifAbsence } from '../../../models/motif-absence';
+import { DocumentEvenement } from '../../../models/document-evenement';
+import { Evenement } from '../../../models/evenement';
+
+// Imports Material
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-evenement-declaration',
   imports: [
     ReactiveFormsModule,
-    CommonModule
+    CommonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './evenement-declaration.component.html',
   styleUrls: ['./evenement-declaration.component.scss'],
   standalone: true,
 })
 export class EvenementDeclarationComponent implements OnInit {
+
+  @Output() evenementDeclare = new EventEmitter<any>();
 
   submitted = false;
   successMessage: string | null = null;
@@ -34,23 +50,26 @@ export class EvenementDeclarationComponent implements OnInit {
     private evenementService: EvenementService,
     private authService: AuthService,
   ) {
+    // Formulaire mis à jour avec les nouveaux champs
     this.declarationForm = this.fb.group({
       type: ['ABSENCE', Validators.required],
-      date: ['', Validators.required],
       motif: ['', Validators.required],
-      description: ['']
+      dateDebut: ['', Validators.required],
+      dateFin: [''], // Optionnel
+      heureArrivee: [''], // Nouveau champ pour l'heure d'arrivée estimée
+      description: [''] // Justificatif
     });
   }
 
-  ngOnInit()  {
+  ngOnInit() {
     this.loadMotifs();
 
     // Écouter les changements de type pour charger les bons motifs
     this.declarationForm.get('type')?.valueChanges.subscribe(() => {
-    this.loadMotifs();
-    this.declarationForm.get('motif')?.setValue('');
-  });
-}
+      this.loadMotifs();
+      this.declarationForm.get('motif')?.setValue('');
+    });
+  }
 
   loadMotifs() {
     const type = this.declarationForm.get('type')?.value;
@@ -87,36 +106,34 @@ export class EvenementDeclarationComponent implements OnInit {
 
   // === SOUMISSION DU FORMULAIRE ===
 
-
   onSubmit() {
     this.submitted = true;
     this.successMessage = null;
     this.errorMessage = null;
 
-  if (this.declarationForm.invalid) {
-    this.markFormGroupTouched();
-    this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
-    return;
-  }
+    if (this.declarationForm.invalid) {
+      this.markFormGroupTouched();
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
+      return;
+    }
 
-  this.isLoading = true;
-  const formData = this.declarationForm.value;
-  // Utiliser un ID fixe pour le mock
-  const stagiaireId = 1; // à remplacer par le vrai id !
+    this.isLoading = true;
+    const formData = this.declarationForm.value;
+    const stagiaireId = 1; // À remplacer par le vrai ID
 
     // Si un fichier est sélectionné, l'uploader d'abord
-  if (this.selectedFile) {
-    this.uploadDocument().then(document => {
-      this.declareEventWithDocument (formData, stagiaireId, document.id!);
-    }).catch(error => {
-      console.error('Erreur upload:', error);
-      this.errorMessage = "Erreur lors de l'envoi du document.";
-      this.isLoading = false;
-    });
-  } else {
-    this.declareEventWithoutDocument(formData, stagiaireId);
+    if (this.selectedFile) {
+      this.uploadDocument().then(document => {
+        this.declareEventWithDocument(formData, stagiaireId, document.id!);
+      }).catch(error => {
+        console.error('Erreur upload:', error);
+        this.errorMessage = "Erreur lors de l'envoi du document.";
+        this.isLoading = false;
+      });
+    } else {
+      this.declareEventWithoutDocument(formData, stagiaireId);
+    }
   }
-}
 
   private uploadDocument(): Promise<DocumentEvenement> {
     return new Promise((resolve, reject) => {
@@ -139,7 +156,9 @@ export class EvenementDeclarationComponent implements OnInit {
     const evenement: Evenement = {
       stagiaireId,
       type: formData.type,
-      date: formData.date,
+      dateDebut: formData.dateDebut,
+      dateFin: formData.dateFin,
+      heureArrivee: formData.heureArrivee,
       motif: formData.motif,
       description: formData.description,
       documentId: documentId
@@ -152,7 +171,9 @@ export class EvenementDeclarationComponent implements OnInit {
     const evenement: Evenement = {
       stagiaireId,
       type: formData.type,
-      date: formData.date,
+      dateDebut: formData.dateDebut,
+      dateFin: formData.dateFin,
+      heureArrivee: formData.heureArrivee,
       motif: formData.motif,
       description: formData.description
     };
@@ -167,6 +188,17 @@ export class EvenementDeclarationComponent implements OnInit {
         this.successMessage = "Événement déclaré avec succès.";
         this.showSuccess = true;
         this.isLoading = false;
+
+        // Émission de l'événement vers le parent
+        this.evenementDeclare.emit({
+          type: evenement.type,
+          dateDebut: new Date(evenement.dateDebut),
+          dateFin: evenement.dateFin ? new Date(evenement.dateFin) : null,
+          heureArrivee: evenement.heureArrivee,
+          motif: evenement.motif,
+          description: evenement.description,
+          document: this.selectedFile
+        });
 
         setTimeout(() => {
           this.resetForm();
@@ -198,12 +230,14 @@ export class EvenementDeclarationComponent implements OnInit {
   // === GETTERS POUR LE TEMPLATE ===
 
   get typeControl() { return this.declarationForm.get('type'); }
-  get dateControl() { return this.declarationForm.get('date'); }
+  get dateDebutControl() { return this.declarationForm.get('dateDebut'); }
+  get dateFinControl() { return this.declarationForm.get('dateFin'); }
+  get heureArriveeControl() { return this.declarationForm.get('heureArrivee'); }
   get motifControl() { return this.declarationForm.get('motif'); }
+  get descriptionControl() { return this.declarationForm.get('description'); }
 
   getMotifSelected(): MotifAbsence | undefined {
     const motifCode = this.motifControl?.value;
     return this.motifs.find(m => m.code === motifCode);
   }
-
 }

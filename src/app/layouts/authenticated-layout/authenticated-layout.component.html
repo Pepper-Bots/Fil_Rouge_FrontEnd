@@ -1,6 +1,10 @@
 <div class="app-layout">
   <!-- Sidebar -->
-  <div class="sidebar" [class.collapsed]="sidebarCollapsed">
+  <div class="sidebar"
+       [class.collapsed]="sidebarCollapsed"
+       [class.stagiaire-theme]="isStagiaire()"
+       [class.admin-theme]="isAdmin()">
+
     <div class="sidebar-header">
       <h2>NovaTech Academy</h2>
       <p class="user-welcome" *ngIf="userFullName">
@@ -8,64 +12,85 @@
       </p>
     </div>
 
-    <nav class="sidebar-menu">
-      <!-- Menu Stagiaire -->
+      <nav class="sidebar-menu">
+
+      <!-- 👨‍🎓 MENU STAGIAIRE -->
       <ng-container *ngIf="isStagiaire()">
         <a routerLink="/dashboard-stagiaire" class="menu-item" routerLinkActive="active">
           <mat-icon>dashboard</mat-icon>
           <span>Tableau de bord</span>
         </a>
-        <a routerLink="/document-upload" class="menu-item" routerLinkActive="active">
-          <mat-icon>cloud_upload</mat-icon>
-          <span>Mes documents</span>
-        </a>
-        <a routerLink="/dossiers" class="menu-item" routerLinkActive="active">
+        <a routerLink="/mon-dossier" class="menu-item" routerLinkActive="active">
           <mat-icon>folder</mat-icon>
           <span>Mon dossier</span>
         </a>
-        <a routerLink="/accueil" class="menu-item" routerLinkActive="active">
-          <mat-icon>home</mat-icon>
-          <span>Accueil</span>
+        <a routerLink="/document-upload" class="menu-item" routerLinkActive="active">
+          <mat-icon>cloud_upload</mat-icon>
+          <span>Documents à fournir</span>
+        </a>
+        <a routerLink="/mon-parcours" class="menu-item" routerLinkActive="active">
+          <mat-icon>school</mat-icon>
+          <span>Mon parcours</span>
+        </a>
+        <a routerLink="/mes-alertes" class="menu-item" routerLinkActive="active">
+          <mat-icon>notification_important</mat-icon>
+          <span>Mes alertes</span>
         </a>
       </ng-container>
 
-      <!-- Menu Admin -->
+      <!-- 👨‍💼 MENU ADMINISTRATEUR -->
       <ng-container *ngIf="isAdmin()">
         <a routerLink="/dashboard-admin" class="menu-item" routerLinkActive="active">
           <mat-icon>dashboard</mat-icon>
           <span>Tableau de bord</span>
         </a>
-        <a routerLink="/document-validation" class="menu-item" routerLinkActive="active">
+        <a routerLink="/validation-documents" class="menu-item" routerLinkActive="active">
           <mat-icon>assignment_turned_in</mat-icon>
           <span>Validation documents</span>
         </a>
-        <a routerLink="/dossiers" class="menu-item" routerLinkActive="active">
-          <mat-icon>folder_shared</mat-icon>
-          <span>Gestion dossiers</span>
+        <a routerLink="/gestion-stagiaires" class="menu-item" routerLinkActive="active">
+          <mat-icon>people</mat-icon>
+          <span>Gestion stagiaires</span>
         </a>
-        <a routerLink="/ajout-dossier" class="menu-item" routerLinkActive="active">
-          <mat-icon>person_add</mat-icon>
-          <span>Ajouter stagiaire</span>
+        <a routerLink="/gestion-formations" class="menu-item" routerLinkActive="active">
+          <mat-icon>school</mat-icon>
+          <span>Formations</span>
         </a>
-        <!-- Menu supplémentaire pour Super Admin -->
-        <ng-container *ngIf="isSuperAdmin()">
-          <a routerLink="/admin/formations" class="menu-item" routerLinkActive="active">
-            <mat-icon>school</mat-icon>
-            <span>Gestion formations</span>
-          </a>
-          <a routerLink="/admin/users" class="menu-item" routerLinkActive="active">
-            <mat-icon>people</mat-icon>
-            <span>Gestion utilisateurs</span>
-          </a>
-        </ng-container>
-      </ng-container>
+        <a routerLink="/statistiques" class="menu-item" routerLinkActive="active">
+          <mat-icon>analytics</mat-icon>
+          <span>Statistiques</span>
+        </a>
 
-      <!-- Menu commun -->
+      <!-- 🔧 MENU SUPER ADMIN -->
+      <ng-container *ngIf="isSuperAdmin()">
+        <div class="menu-divider"></div>
+        <a routerLink="/admin/users" class="menu-item" routerLinkActive="active">
+          <mat-icon>manage_accounts</mat-icon>
+          <span>Gestion utilisateurs</span>
+        </a>
+        <a routerLink="/admin/system" class="menu-item" routerLinkActive="active">
+          <mat-icon>settings</mat-icon>
+          <span>Configuration</span>
+        </a>
+      </ng-container>
+    </ng-container>
+
+      <!-- 🔧 MENU COMMUN -->
       <div class="menu-divider"></div>
-      <a routerLink="/accueil" class="menu-item" routerLinkActive="active">
-        <mat-icon>home</mat-icon>
-        <span>Accueil</span>
+
+      <!-- Paramètres (pour tous) -->
+      <a routerLink="/mon-profil" class="menu-item" routerLinkActive="active">
+        <mat-icon>person</mat-icon>
+        <span>Mon profil</span>
       </a>
+
+      <!-- Règlement (pour tous) -->
+      <a routerLink="/reglement" class="menu-item" routerLinkActive="active">
+        <mat-icon>gavel</mat-icon>
+        <span>Règlement</span>
+      </a>
+
+      <!-- Déconnexion -->
       <a (click)="logout()" class="menu-item logout">
         <mat-icon>logout</mat-icon>
         <span>Déconnexion</span>

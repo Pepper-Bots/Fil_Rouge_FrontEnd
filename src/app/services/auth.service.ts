@@ -363,4 +363,9 @@ export class AuthService {
 
     return null;
   }
+
+  getCurrentUser(): User | Admin | Stagiaire | null {
+    return this.getUser(); // Utilise votre méthode existante
+  }
+
 }

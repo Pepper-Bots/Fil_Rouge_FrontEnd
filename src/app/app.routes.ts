@@ -12,11 +12,13 @@ import { connecteGuard } from './services/connecte.guard';
 import { EditDossierComponent } from './pages/edit-dossier/edit-dossier.component';
 import { DocumentValidationComponent } from './pages/document-validation/document-validation.component';
 import { DocumentUploadComponent } from './pages/document-upload/document-upload.component';
-import { adminGuard } from './guards/admin.guard';
+import { AdminGuard } from './guards/adminGuard';
 
 // Import du nouveau layout et guard
 import { AuthenticatedLayoutComponent } from './layouts/authenticated-layout/authenticated-layout.component';
 import { AuthGuard } from './guards/auth.guard';
+import {ProfileComponent} from './pages/profile/profile.component';
+import {StagiaireGuard} from './guards/stagiaire.guard';
 
 export const routes: Routes = [
   // Route racine - redirige vers preconnexion
@@ -42,23 +44,35 @@ export const routes: Routes = [
       // === ROUTES STAGIAIRES === //
       {
         path: 'dashboard-stagiaire',
-        component: DashboardStagiaireComponent
+        component: DashboardStagiaireComponent,
+        canActivate: [StagiaireGuard],
+      },
+      {
+        path: 'profile',
+        component: ProfileComponent,
+        canActivate: [StagiaireGuard]
+      },
+      {
+        path: 'dossiers',
+        component: DossiersListComponent,
+        canActivate: [AuthGuard]
       },
       {
         path: 'document-upload',
-        component: DocumentUploadComponent  // Permet aux stagiaires d'envoyer leurs documents requis
+        component: DocumentUploadComponent,  // Permet aux stagiaires d'envoyer leurs documents requis
+        canActivate: [StagiaireGuard],
       },
 
       // === ROUTES ADMIN SEULEMENT === //
       {
         path: 'dashboard-admin',
         component: DashboardAdminComponent,
-        canActivate: [adminGuard]
+        canActivate: [AdminGuard]
       },
       {
         path: 'document-validation',
         component: DocumentValidationComponent,
-        canActivate: [adminGuard]
+        canActivate: [AdminGuard]
       },
 
       // Routes pour les Dossiers (accessible selon les droits)
@@ -69,12 +83,12 @@ export const routes: Routes = [
       {
         path: 'dossiers/nouveau',
         component: EditDossierComponent,
-        canActivate: [adminGuard]  // ✅ SÉCURISÉ : Création réservée aux admins
+        canActivate: [AdminGuard]  // ✅ SÉCURISÉ : Création réservée aux admins
       },
       {
         path: 'dossiers/:id',
         component: EditDossierComponent,
-        canActivate: [adminGuard] // ✅ SÉCURISÉ : Édition réservée aux admins
+        canActivate: [AdminGuard] // ✅ SÉCURISÉ : Édition réservée aux admins
       },
       {
         path: 'dossier/:id',
@@ -85,7 +99,7 @@ export const routes: Routes = [
       {
         path: 'ajout-dossier',
         component: EditStagiaireComponent,
-        canActivate: [adminGuard]  // ✅ SÉCURISÉ : Admin uniquement
+        canActivate: [AdminGuard]  // ✅ SÉCURISÉ : Admin uniquement
       },
 
       // === ROUTES SUPER ADMIN === //

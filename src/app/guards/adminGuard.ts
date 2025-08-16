@@ -6,7 +6,7 @@ import { AuthService } from '../services/auth.service'
  * Guard qui empêche l'accès aux pages admin si l'utilisateur n'est pas un administrateur.
  * Sécurise les routes réservées aux ADMIN et SUPER_ADMIN.
  */
-export const adminGuard: CanActivateFn = (route, state) => {
+export const AdminGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -48,7 +48,7 @@ export const superAdminGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   // Réutiliser la logique de base d'adminGuard
-  const adminAccess = adminGuard(route, state);
+  const adminAccess = AdminGuard(route, state);
   if (typeof adminAccess !== 'boolean') {
     return adminAccess; // Redirection déjà gérée
   }

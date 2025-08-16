@@ -1,1 +1,143 @@
-<p>evenement-list works!</p>
+<!--&lt;!&ndash; Formulaire de déclaration d'événement - Conforme à la maquette &ndash;&gt;-->
+<!--<div class="declaration-form">-->
+
+<!--  &lt;!&ndash; Messages de retour &ndash;&gt;-->
+<!--  @if (errorMessage) {-->
+<!--    <div class="alert alert-error">-->
+<!--      <mat-icon>error</mat-icon>-->
+<!--      <span>{{ errorMessage }}</span>-->
+<!--    </div>-->
+<!--  }-->
+
+<!--  @if (successMessage && showSuccess) {-->
+<!--    <div class="alert alert-success">-->
+<!--      <mat-icon>check_circle</mat-icon>-->
+<!--      <span>{{ successMessage }}</span>-->
+<!--    </div>-->
+<!--  }-->
+
+<!--  &lt;!&ndash; Formulaire &ndash;&gt;-->
+<!--  <form [formGroup]="declarationForm" (ngSubmit)="onSubmit()" class="form-container">-->
+
+<!--    &lt;!&ndash; Type de déclaration &ndash;&gt;-->
+<!--    <div class="form-field">-->
+<!--      <label class="field-label">Type de déclaration :</label>-->
+<!--      <mat-form-field appearance="outline" class="custom-field">-->
+<!--        <mat-select formControlName="type" placeholder="Sélectionner">-->
+<!--          <mat-option value="ABSENCE">Absence</mat-option>-->
+<!--          <mat-option value="RETARD">Retard</mat-option>-->
+<!--        </mat-select>-->
+<!--      </mat-form-field>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Motif &ndash;&gt;-->
+<!--    <div class="form-field">-->
+<!--      <label class="field-label">Sélectionnez un motif :</label>-->
+<!--      <mat-form-field appearance="outline" class="custom-field">-->
+<!--        <mat-select formControlName="motif" placeholder="Motif">-->
+<!--          @for (motif of motifs; track motif.code) {-->
+<!--            <mat-option [value]="motif.code">{{ motif.libelle }}</mat-option>-->
+<!--          }-->
+<!--        </mat-select>-->
+<!--      </mat-form-field>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Dates &ndash;&gt;-->
+<!--    <div class="dates-row">-->
+<!--      <div class="form-field half-width">-->
+<!--        <label class="field-label">Date de début :</label>-->
+<!--        <mat-form-field appearance="outline" class="custom-field">-->
+<!--          <input matInput-->
+<!--                 type="date"-->
+<!--                 formControlName="dateDebut"-->
+<!--                 placeholder="jj/mm/aaaa"-->
+<!--                 [min]="getTodayDate()">-->
+<!--        </mat-form-field>-->
+<!--      </div>-->
+
+<!--      <div class="form-field half-width">-->
+<!--        <label class="field-label">Date de fin :</label>-->
+<!--        <mat-form-field appearance="outline" class="custom-field">-->
+<!--          <input matInput-->
+<!--                 type="date"-->
+<!--                 formControlName="dateFin"-->
+<!--                 placeholder="jj/mm/aaaa"-->
+<!--                 [min]="getTodayDate()">-->
+<!--        </mat-form-field>-->
+<!--      </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Heure d'arrivée estimée &ndash;&gt;-->
+<!--    <div class="form-field">-->
+<!--      <label class="field-label">Heure d'arrivée estimée :</label>-->
+<!--      <mat-form-field appearance="outline" class="custom-field">-->
+<!--        <input matInput-->
+<!--               type="time"-->
+<!--               formControlName="heureArrivee"-->
+<!--               placeholder="Heure estimée">-->
+<!--      </mat-form-field>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Justificatif &ndash;&gt;-->
+<!--    <div class="form-field">-->
+<!--      <label class="field-label">Justificatif :</label>-->
+<!--      <mat-form-field appearance="outline" class="custom-field textarea-field">-->
+<!--        <textarea matInput-->
+<!--                  formControlName="description"-->
+<!--                  placeholder="Description ou commentaire"-->
+<!--                  rows="4"></textarea>-->
+<!--      </mat-form-field>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Upload de fichier (optionnel) &ndash;&gt;-->
+<!--    <div class="form-field">-->
+<!--      <label class="field-label">Document justificatif (optionnel) :</label>-->
+<!--      <div class="file-upload-area">-->
+<!--        <input type="file"-->
+<!--               id="document"-->
+<!--               #fileInput-->
+<!--               (change)="onFileSelected($event)"-->
+<!--               accept=".pdf,.jpg,.jpeg,.png"-->
+<!--               style="display: none;">-->
+
+<!--        @if (!selectedFile) {-->
+<!--          <button type="button"-->
+<!--                  mat-stroked-button-->
+<!--                  class="upload-btn"-->
+<!--                  (click)="fileInput.click()">-->
+<!--            <mat-icon>attach_file</mat-icon>-->
+<!--            Choisir un fichier-->
+<!--          </button>-->
+<!--        } @else {-->
+<!--          <div class="file-selected">-->
+<!--            <mat-icon>description</mat-icon>-->
+<!--            <span class="file-name">{{ selectedFile.name }}</span>-->
+<!--            <span class="file-size">({{ formatFileSize(selectedFile.size) }})</span>-->
+<!--            <button type="button"-->
+<!--                    mat-icon-button-->
+<!--                    class="remove-file-btn"-->
+<!--                    (click)="removeFile()">-->
+<!--              <mat-icon>close</mat-icon>-->
+<!--            </button>-->
+<!--          </div>-->
+<!--        }-->
+<!--      </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Bouton de soumission &ndash;&gt;-->
+<!--    <div class="form-actions">-->
+<!--      <button type="submit"-->
+<!--              mat-raised-button-->
+<!--              class="submit-btn"-->
+<!--              [disabled]="isLoading || declarationForm.invalid">-->
+<!--        @if (isLoading) {-->
+<!--          <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>-->
+<!--        } @else {-->
+<!--          <span>Déclarer l'événement</span>-->
+<!--        }-->
+<!--      </button>-->
+<!--    </div>-->
+
+<!--  </form>-->
+
+<!--</div>-->

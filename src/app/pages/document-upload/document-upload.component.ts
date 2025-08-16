@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {AuthService} from '../../services/auth.service';
 import {MatProgressBar} from '@angular/material/progress-bar';
+import {FormationService} from '../../services/crud/formation.service';
 
 
 @Component({
@@ -59,6 +60,7 @@ export class DocumentUploadComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private documentService: DocumentService,
+    private formationService: FormationService,
     private authService: AuthService,
     private snackBar: MatSnackBar
   ) {
@@ -147,6 +149,97 @@ export class DocumentUploadComponent implements OnInit {
     console.log('📊 Statut dossier formation:', this.statutDossierFormation);
   }
 
+  getDescriptionFormation(): string {
+    if (!this.selectedFormation) {
+      return '';
+    }
+    return this.formationService.getDescriptionDetaillee(this.selectedFormation.id);
+  }
+
+  /**
+   * Récupère les formations auxquelles le stagiaire est inscrit
+   */
+  getFormationsInscrites(): StatutDossierFormation[] {
+    return this.formations.filter(formation =>
+      formation.statutDossier !== 'NON_INSCRIT'
+    );
+  }
+
+  /**
+   * Sélectionne une formation et déclenche l'affichage des documents
+   */
+  selectFormation(formation: StatutDossierFormation): void {
+    this.form.patchValue({ formation: formation });
+    this.onFormationChange(formation);
+  }
+
+  /**
+   * Affiche les détails d'une formation (scroll vers la description)
+   */
+  voirDetailsFormation(formation: StatutDossierFormation): void {
+    this.selectFormation(formation);
+
+    // Scroll vers la section description
+    setTimeout(() => {
+      const element = document.querySelector('.formation-description');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
+  /**
+   * Récupère le niveau d'une formation par son ID
+   */
+  getNiveauFormationById(formationId: number): string {
+    return this.formationService.getNiveauFormation(formationId);
+  }
+
+  /**
+   * Récupère la durée d'une formation par son ID
+   */
+  getDureeFormationById(formationId: number): number {
+    return this.formationService.getDureeFormation(formationId);
+  }
+
+  /**
+   * Récupère le label d'affichage du statut
+   */
+  getStatutLabel(statut: string): string {
+    const labels: { [key: string]: string } = {
+      'COMPLET': 'Formation en cours',
+      'EN_VALIDATION': 'Dossier en validation',
+      'INCOMPLET': 'Inscription en cours',
+      'NON_INSCRIT': 'Non inscrit'
+    };
+    return labels[statut] || statut;
+  }
+
+  getFormattedDescription(): string {
+    let description = this.getDescriptionFormation();
+
+    // Convertir **texte** en <strong>texte</strong>
+    description = description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Convertir _texte_ en <em>texte</em>
+    description = description.replace(/_(.*?)_/g, '<em>$1</em>');
+
+    return description;
+  }
+
+  getNiveauFormation(): string {
+    if (!this.selectedFormation) {
+      return '';
+    }
+    return this.formationService.getNiveauFormation(this.selectedFormation.id);
+  }
+
+  getDureeFormation(): number {
+    if (!this.selectedFormation) {
+      return 0;
+    }
+    return this.formationService.getDureeFormation(this.selectedFormation.id);
+  }
   /**
    * Charge les documents requis pour une formation
    */
