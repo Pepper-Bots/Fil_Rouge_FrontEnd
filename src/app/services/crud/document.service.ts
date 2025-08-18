@@ -2,11 +2,12 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import {BehaviorSubject, Observable, of, tap, throwError} from 'rxjs';
 import {TypeDocument} from '../../models/type-document.enum';
 import { Document } from '../../models/document';
 import { Formation} from '../../models/formation';
 import { environment } from '../../../environments/environment';
+import {catchError} from 'rxjs/operators';
 
 export interface DocumentValidation {
   Statut: string; // 'VALIDÉ' | 'REFUSÉ'
@@ -44,12 +45,47 @@ export interface DossierStatut {
   documentsRequis: DocumentRequis[];
 }
 
+// ===== INTERFACES POUR VALIDATION =====
+
+interface DocumentUploadResponse {
+  success: boolean;
+  message: string;
+  documentId?: string;
+}
+
+interface ValidationStats {
+  totalEnAttente: number;
+  totalValides: number;
+  totalRejetes: number;
+  validesAujourdhui: number;
+  rejetesAujourdhui: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentService {
 
   private readonly API_BASE_URL = environment.serverUrl + 'api';
+
+  // Subject pour notifier les changements de documents
+  private documentsSubject = new BehaviorSubject<Document[]>([]);
+  public documents$ = this.documentsSubject.asObservable();
+
+  // Cache des types de documents
+  private typesDocuments: { [key: string]: string } = {
+    'CV': 'Curriculum Vitae',
+    'LETTRE_MOTIVATION': 'Lettre de motivation',
+    'PORTFOLIO': 'Portfolio',
+    'DIPLOME_BAC': 'Diplôme BAC',
+    'DIPLOME_BAC_2': 'Diplôme BAC+2',
+    'DIPLOME_BAC_3': 'Diplôme BAC+3',
+    'PIECE_IDENTITE': 'Pièce d\'identité',
+    'ATTEST_RESP_CIVILE': 'Attestation responsabilité civile',
+    'JUSTIF_SITUATION': 'Justificatif de situation',
+    'JUSTIFICATIF': 'Justificatif',
+    'AUTRE': 'Autre document'
+  };
 
   constructor(private http: HttpClient) {}
 
@@ -283,7 +319,9 @@ export class DocumentService {
           nom: 'EN_ATTENTE'
         },
         dateDepot: '2024-12-01T10:30:00',
-        commentaire: ''
+        commentaire: '',
+        taille: 245760, // 240 KB
+        typeFichier: 'application/pdf'
       },
       {
         id: 2,
@@ -302,7 +340,9 @@ export class DocumentService {
           nom: 'EN_ATTENTE'
         },
         dateDepot: '2024-11-30T14:15:00',
-        commentaire:''
+        commentaire:'',
+        taille: 1024000, // 1 MB
+        typeFichier: 'image/jpeg'
       }
     ];
   }
@@ -343,7 +383,8 @@ export class DocumentService {
     // Mode production
     return this.http.get<Formation[]>(`${this.API_BASE_URL}/formation/formations`, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(catchError(this.handleError));
+
   }
 
   /**
@@ -382,7 +423,7 @@ export class DocumentService {
     // Mode production
     return this.http.get<StatutDossierFormation>(`${this.API_BASE_URL}/documents/formation/${formationId}/statut/${stagiaireId}`, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -395,10 +436,15 @@ export class DocumentService {
     formData.append('userId', userId.toString());
 
     return this.http.post(`${this.API_BASE_URL}/documents/formations/${formationId}/upload`, formData, {
-      headers: this.getHttpHeaders(false) // Pas de Content-Type pour FormData
-    });
+      headers: this.getHttpHeaders(false)
+    }).pipe(
+      tap(response => {
+        console.log('Document uploadé pour formation:', response);
+        this.refreshDocumentsEnAttente();
+      }),
+      catchError(this.handleError)
+    );
   }
-
 
   /**
    * Upload d'un document pour un dossier spécifique
@@ -426,7 +472,13 @@ export class DocumentService {
 
     return this.http.post(`${this.API_BASE_URL}/documents/dossier/${dossierId}/upload`, formData, {
       headers: this.getHttpHeaders(false)
-    });
+    }).pipe(
+      tap(response => {
+        console.log('Document uploadé pour dossier:', response);
+        this.refreshDocumentsEnAttente();
+      }),
+      catchError(this.handleError)
+    );
   }
 
   /**
@@ -447,8 +499,10 @@ export class DocumentService {
     // Mode production - utilise ton nouvel endpoint
     return this.http.get<StatutDossierFormation[]>(`${this.API_BASE_URL}/documents/stagiaire/${stagiaireId}/formations-avec-statut`, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(catchError(this.handleError));
   }
+
+  // ======= METHODES POUR VALIDATION ====
 
   /**
    * Documents en attente de validation (admin)
@@ -465,10 +519,15 @@ export class DocumentService {
       });
     }
 
-    // Mode production
     return this.http.get<Document[]>(`${this.API_BASE_URL}/documents/en-attente`, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(
+      tap(documents => {
+        console.log('Documents en attente récupérés:', documents);
+        this.documentsSubject.next(documents);
+      }),
+      catchError(this.handleError)
+    );
   }
 
   /**
@@ -489,10 +548,27 @@ export class DocumentService {
       });
     }
 
-    // Mode production
     return this.http.put(`${this.API_BASE_URL}/documents/valider/${documentId}`, validation, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(
+      tap(() => {
+        console.log(`Document ${documentId} ${validation.Statut.toLowerCase()}`);
+        this.refreshDocumentsEnAttente();
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Refuse un document avec motif
+   */
+  rejeterDocument(documentId: number, motif: string): Observable<any> {
+    const validation: DocumentValidation = {
+      Statut: 'REFUSÉ',
+      Commentaire: motif
+    };
+
+    return this.validerDocument(documentId, validation);
   }
 
   /**
@@ -511,7 +587,7 @@ export class DocumentService {
     return this.http.get(`${this.API_BASE_URL}/documents/download/${documentId}`, {
       headers: this.getHttpHeaders(false),
       responseType: 'blob'
-    });
+    }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -529,10 +605,15 @@ export class DocumentService {
       });
     }
 
-    // Mode production
     return this.http.delete(`${this.API_BASE_URL}/documents/${documentId}`, {
       headers: this.getHttpHeaders()
-    });
+    }).pipe(
+      tap(() => {
+        console.log(`Document ${documentId} supprimé`);
+        this.refreshDocumentsEnAttente();
+      }),
+      catchError(this.handleError)
+    );
   }
 
   // ==================== MÉTHODES UTILITAIRES ====================
@@ -598,4 +679,184 @@ export class DocumentService {
   getFormationByStagiaire(stagiaireId: number): Observable<Formation[]> {
     return this.getFormationsByStagiaire(stagiaireId);
   }
+
+  // ===== AJOUTEZ CES MÉTHODES À LA FIN DE VOTRE DocumentService EXISTANT =====
+
+  /**
+   * Valide plusieurs documents en lot
+   */
+  validerDocumentsEnLot(documentIds: number[], commentaire?: string): Observable<any> {
+    const url = `${this.API_BASE_URL}/documents/validation/batch`;
+    const payload = {
+      documentIds,
+      statut: 'VALIDÉ',
+      commentaire: commentaire || 'Validation en lot'
+    };
+
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Validation en lot simulée', payload);
+      return new Observable(observer => {
+        setTimeout(() => {
+          observer.next({
+            success: true,
+            message: `${documentIds.length} documents validés en lot`
+          });
+          observer.complete();
+        }, 1500);
+      });
+    }
+
+    return this.http.post(url, payload, { headers: this.getHttpHeaders() })
+      .pipe(
+        tap(() => {
+          console.log(`${documentIds.length} documents validés en lot`);
+          this.refreshDocumentsEnAttente();
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupère les statistiques de validation
+   */
+  getValidationStats(): Observable<any> {
+    if ((environment as any).mockAuth) {
+      console.log('🎭 Document: Stats de validation simulées');
+      return of({
+        totalEnAttente: 12,
+        totalValides: 245,
+        totalRejetes: 18,
+        validesAujourdhui: 8,
+        rejetesAujourdhui: 2
+      });
+    }
+
+    return this.http.get(`${this.API_BASE_URL}/documents/stats/validation`, {
+      headers: this.getHttpHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Recherche des documents par critères
+   */
+  searchDocuments(criteria: {
+    type?: string;
+    statut?: string;
+    stagiaireId?: string;
+    dateDebut?: string;
+    dateFin?: string;
+    nomFichier?: string;
+  }): Observable<Document[]> {
+    const url = `${this.API_BASE_URL}/documents/search`;
+
+    return this.http.post<Document[]>(url, criteria, { headers: this.getHttpHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Récupère les documents urgents (> 7 jours en attente)
+   */
+  getDocumentsUrgents(): Observable<Document[]> {
+    const url = `${this.API_BASE_URL}/documents/urgents`;
+
+    return this.http.get<Document[]>(url, { headers: this.getHttpHeaders() })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Vérifie si un type de fichier est autorisé
+   */
+  isFileTypeAllowed(fileName: string): boolean {
+    const allowedExtensions = [
+      '.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png',
+      '.gif', '.bmp', '.xls', '.xlsx', '.txt', '.rtf'
+    ];
+
+    const fileExtension = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+    return allowedExtensions.includes(fileExtension);
+  }
+
+  /**
+   * Vérifie si la taille du fichier est autorisée (max 10MB)
+   */
+  isFileSizeAllowed(fileSize: number): boolean {
+    const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+    return fileSize <= maxSizeInBytes;
+  }
+
+  /**
+   * Valide un fichier avant upload
+   */
+  validateFile(file: File): { valid: boolean; error?: string } {
+    if (!this.isFileTypeAllowed(file.name)) {
+      return {
+        valid: false,
+        error: 'Type de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, JPG, PNG, GIF, BMP, XLS, XLSX, TXT, RTF'
+      };
+    }
+
+    if (!this.isFileSizeAllowed(file.size)) {
+      return {
+        valid: false,
+        error: 'Fichier trop volumineux. Taille maximale autorisée : 10MB'
+      };
+    }
+
+    return { valid: true };
+  }
+
+  /**
+   * Génère un nom de fichier unique
+   */
+  generateUniqueFileName(originalName: string): string {
+    const timestamp = new Date().getTime();
+    const extension = originalName.substring(originalName.lastIndexOf('.'));
+    const nameWithoutExtension = originalName.substring(0, originalName.lastIndexOf('.'));
+
+    return `${nameWithoutExtension}_${timestamp}${extension}`;
+  }
+
+  /**
+   * Rafraîchit la liste des documents en attente (si pas déjà présente)
+   */
+  private refreshDocumentsEnAttente(): void {
+    this.getDocumentsEnAttente().subscribe(
+      documents => {
+        // Les documents sont automatiquement mis à jour via le tap operator
+      },
+      error => {
+        console.error('Erreur lors du rafraîchissement des documents:', error);
+      }
+    );
+  }
+
+  /**
+   * Gestion centralisée des erreurs (si pas déjà présente)
+   */
+  private handleError = (error: any): Observable<never> => {
+    let errorMessage = 'Une erreur est survenue';
+
+    if (error?.error instanceof ErrorEvent) {
+      errorMessage = `Erreur client: ${error.error.message}`;
+    } else if (error?.status) {
+      switch (error.status) {
+        case 400: errorMessage = 'Requête invalide'; break;
+        case 401: errorMessage = 'Non autorisé - Veuillez vous reconnecter'; break;
+        case 403: errorMessage = 'Accès interdit'; break;
+        case 404: errorMessage = 'Document non trouvé'; break;
+        case 413: errorMessage = 'Fichier trop volumineux'; break;
+        case 415: errorMessage = 'Type de fichier non supporté'; break;
+        case 500: errorMessage = 'Erreur serveur interne'; break;
+        case 503: errorMessage = 'Service temporairement indisponible'; break;
+        default: errorMessage = `Erreur serveur: ${error.status} - ${error.message}`;
+      }
+
+      if (error.error && typeof error.error === 'object' && error.error.message) {
+        errorMessage = error.error.message;
+      }
+    }
+
+    console.error('Erreur DocumentService:', error);
+    return throwError(() => new Error(errorMessage));
+  };
 }

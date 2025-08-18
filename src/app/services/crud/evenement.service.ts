@@ -136,7 +136,7 @@ export class EvenementService {
         id: 1,
         stagiaireId: 1,
         type: 'ABSENCE',
-        date: '2025-01-15',
+        dateDebut: '2025-01-15',
         motif: 'MALADIE'
       }
     ];

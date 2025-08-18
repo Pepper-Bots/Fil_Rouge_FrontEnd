@@ -40,66 +40,78 @@ export const routes: Routes = [
         path: 'accueil',
         component: AccueilComponent
       },
+      {
+        path: 'dossiers',
+        component: DossiersListComponent,
+        canActivate: [AuthGuard],
+
+      },
 
       // === ROUTES STAGIAIRES === //
       {
         path: 'dashboard-stagiaire',
         component: DashboardStagiaireComponent,
         canActivate: [StagiaireGuard],
+        data: {title: 'Mon espace stagiaire'}
       },
       {
         path: 'profile',
         component: ProfileComponent,
-        canActivate: [StagiaireGuard]
-      },
-      {
-        path: 'dossiers',
-        component: DossiersListComponent,
-        canActivate: [AuthGuard]
+        canActivate: [StagiaireGuard],
+        data: {title: 'Mon profil'}
       },
       {
         path: 'document-upload',
         component: DocumentUploadComponent,  // Permet aux stagiaires d'envoyer leurs documents requis
         canActivate: [StagiaireGuard],
+        data: {title: 'Envoi de documents'}
       },
 
       // === ROUTES ADMIN SEULEMENT === //
       {
         path: 'dashboard-admin',
         component: DashboardAdminComponent,
-        canActivate: [AdminGuard]
+        canActivate: [AdminGuard],
+        data: {title: 'Dashboard Administrateur'}
       },
       {
         path: 'document-validation',
         component: DocumentValidationComponent,
-        canActivate: [AdminGuard]
+        canActivate: [AdminGuard],
+        data: {title: 'Validation des documents'}
       },
 
       // Routes pour les Dossiers (accessible selon les droits)
       {
         path: 'dossiers',
-        component: DossiersListComponent // Peut être accessible aux deux rôles
+        component: DossiersListComponent, // Peut être accessible aux deux rôles
+        canActivate: [AdminGuard],
+        data: {title: 'Liste des dossiers'}
       },
       {
         path: 'dossiers/nouveau',
         component: EditDossierComponent,
-        canActivate: [AdminGuard]  // ✅ SÉCURISÉ : Création réservée aux admins
+        canActivate: [AdminGuard],  // ✅ SÉCURISÉ : Création réservée aux admins
+        data: {title: 'Nouveau dossier'}
       },
       {
         path: 'dossiers/:id',
         component: EditDossierComponent,
-        canActivate: [AdminGuard] // ✅ SÉCURISÉ : Édition réservée aux admins
+        canActivate: [AdminGuard], // ✅ SÉCURISÉ : Édition réservée aux admins
+        data: {title: 'Edition du dossier'}
       },
       {
         path: 'dossier/:id',
-        component: DossierDetailComponent // Consultation possible pour tous
+        component: DossierDetailComponent, // Consultation possible pour tous
+        data: {title: 'Détail du dossier'}
       },
 
       // Autres routes administratives
       {
         path: 'ajout-dossier',
         component: EditStagiaireComponent,
-        canActivate: [AdminGuard]  // ✅ SÉCURISÉ : Admin uniquement
+        canActivate: [AdminGuard],  // ✅ SÉCURISÉ : Admin uniquement
+        data: {title: 'Ajout de stagiaire'}
       },
 
       // === ROUTES SUPER ADMIN === //

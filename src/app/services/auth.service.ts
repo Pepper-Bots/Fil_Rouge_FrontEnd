@@ -368,4 +368,9 @@ export class AuthService {
     return this.getUser(); // Utilise votre méthode existante
   }
 
+  registerStagiaire(stagiaire: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/stagiaires`, stagiaire);
+  }
+
+
 }

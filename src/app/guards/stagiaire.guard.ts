@@ -20,7 +20,6 @@ export class StagiaireGuard implements CanActivate {
 
     const user = this.authService.getCurrentUser();
 
-
     // Vérifier si l'utilisateur est connecté
     if (!this.authService.isAuthenticated()) {
       console.log('❌ Utilisateur non connecté - Redirection vers login');

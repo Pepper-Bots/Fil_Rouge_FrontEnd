@@ -452,4 +452,9 @@ export class DashboardAdminComponent implements OnInit, OnDestroy {
   private demarrerRafraishissementAutomatique() {
 
   }
+
+  naviguerVersValidationDocuments(): void {
+    this.router.navigate(['/document-validation']);
+  }
+
 }

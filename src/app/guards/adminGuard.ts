@@ -4,7 +4,7 @@ import { AuthService } from '../services/auth.service'
 
 /**
  * Guard qui empêche l'accès aux pages admin si l'utilisateur n'est pas un administrateur.
- * Sécurise les routes réservées aux ADMIN et SUPER_ADMIN.
+ * Sécurise les routes réservées aux ADMIN.
  */
 export const AdminGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -12,13 +12,11 @@ export const AdminGuard: CanActivateFn = (route, state) => {
 
   // 1. Vérifier d'abord si l'utilisateur est connecté
   if (!auth.connecte || !auth.isAuthenticated()) {
-    console.warn('🚫 adminGuard: Utilisateur non connecté');
     return router.parseUrl('/connexion');
   }
 
   // 2. Vérifier si c'est sa première connexion
   if (auth.premiereConnexion && state.url !== '/changer-mdp') {
-    console.warn('🚫 adminGuard: Première connexion, redirection changement mdp');
     return router.parseUrl('/changer-mdp');
   }
 
@@ -35,8 +33,6 @@ export const AdminGuard: CanActivateFn = (route, state) => {
     // Fallback vers accueil
     return router.parseUrl('/accueil');
   }
-
-  console.log('✅ adminGuard: Accès autorisé pour', auth.getRole());
   return true;
 };
 

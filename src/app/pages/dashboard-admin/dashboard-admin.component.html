@@ -292,6 +292,16 @@
     </mat-card>
   </div>
 
+  <mat-card class="admin-action-card" (click)="naviguerVersValidationDocuments()">
+    <mat-card-content>
+      <div class="action-content">
+        <mat-icon>fact_check</mat-icon>
+        <h3>Validation Documents</h3>
+        <p>{{ kpiData.nbDocsAttente }} documents en attente</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Error Message -->
   <div class="info-message" *ngIf="errorMessage && !isLoadingKpis">
     <mat-card class="info-card">

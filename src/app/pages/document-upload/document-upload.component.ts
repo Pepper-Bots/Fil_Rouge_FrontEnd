@@ -394,11 +394,7 @@ export class DocumentUploadComponent implements OnInit {
             panelClass: ['success-snackbar']
           });
           this.resetForm(); // Réinitialisation du formulaire
-
-          // ✅ AMÉLIORATION : Recharger toutes les formations pour avoir les dernières données
-          // Plus robuste que de recharger juste une formation
           this.chargerFormationsAvecStatut();
-
           this.notifyAdmin(); // Déclencher une notif pour l'admin
         },
         error: err => {

@@ -1,33 +1,307 @@
-<!-- src/app/pages/document-validation/document-validation.component.html -->
-
-<div class="p-6">
-  <h2>Validation des documents</h2>
-
-  <div *ngIf="isLoading">Chargement...</div>
-
-  <div *ngIf="!isLoading && documents.length === 0">
-    Aucun document en attente
+<div class="validation-container">
+  <!-- Header avec titre et actions -->
+  <div class="validation-header">
+    <div class="header-content">
+      <h1 class="validation-title">
+        <mat-icon>fact_check</mat-icon>
+        Validation des documents
+      </h1>
+      <p class="validation-subtitle">
+        Examinez et validez les documents déposés par les stagiaires
+      </p>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button (click)="loadDocumentsEnAttente()" matTooltip="Actualiser la liste">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Paramètres de validation">
+        <mat-icon>settings</mat-icon>
+      </button>
+    </div>
   </div>
 
-  <div *ngFor="let doc of documents" class="border p-4 m-2">
-    <h4>{{ getTypeDisplayName(doc.type) }}</h4>
-    <p>{{ doc.nomFichier }}</p>
-    <button (click)="selectDocument(doc)">Sélectionner</button>
+  <!-- Indicateurs de statistiques -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <mat-card class="stat-card pending">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>hourglass_empty</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h3 class="stat-value">{{ documents.length }}</h3>
+              <p class="stat-label">Documents en attente</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card validated">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>check_circle</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h3 class="stat-value">{{ validatedToday }}</h3>
+              <p class="stat-label">Validés aujourd'hui</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card rejected">
+        <mat-card-content>
+          <div class="stat-content">
+            <div class="stat-icon">
+              <mat-icon>cancel</mat-icon>
+            </div>
+            <div class="stat-info">
+              <h3 class="stat-value">{{ rejectedToday }}</h3>
+              <p class="stat-label">Refusés aujourd'hui</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
-  <div *ngIf="selectedDocument" class="mt-4 p-4 border">
-    <h3>Document sélectionné</h3>
-    <p>{{ selectedDocument.nomFichier }}</p>
+  <!-- État de chargement -->
+  <div class="loading-section" *ngIf="isLoading">
+    <mat-card class="loading-card">
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+          <p>Chargement des documents en attente...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-    <form [formGroup]="validationForm">
-      <textarea formControlName="commentaire" placeholder="Commentaire"></textarea>
-    </form>
+  <!-- État vide -->
+  <div class="empty-section" *ngIf="!isLoading && documents.length === 0">
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <div class="empty-content">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <h3>Tous les documents sont traités</h3>
+          <p>Aucun document en attente de validation pour le moment</p>
+          <button mat-raised-button color="primary" (click)="loadDocumentsEnAttente()">
+            <mat-icon>refresh</mat-icon>
+            Actualiser
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-    <button (click)="validateDocument('VALIDÉ')" [disabled]="isValidating">
-      Valider
-    </button>
-    <button (click)="validateDocument('REFUSÉ')" [disabled]="isValidating">
-      Refuser
-    </button>
+  <!-- Contenu principal avec liste et détail -->
+  <div class="main-content" *ngIf="!isLoading && documents.length > 0">
+
+    <!-- Liste des documents -->
+    <mat-card class="documents-list-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>description</mat-icon>
+          Documents à examiner
+          <mat-chip-set>
+            <mat-chip color="warn" selected>{{ documents.length }}</mat-chip>
+          </mat-chip-set>
+        </mat-card-title>
+        <mat-card-subtitle>Cliquez sur un document pour l'examiner</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-list>
+          <mat-list-item
+            *ngFor="let doc of documents; let i = index"
+            class="document-item"
+            [class.selected]="selectedDocument?.id === doc.id"
+            (click)="selectDocument(doc)">
+
+            <div matListItemLine class="document-info">
+              <div class="document-header">
+                <mat-icon class="file-type-icon">{{ getFileIcon(doc.type) }}</mat-icon>
+                <div class="document-details">
+                  <span class="document-name">{{ doc.nomFichier }}</span>
+                  <span class="document-type">{{ getTypeDisplayName(doc.type) }}</span>
+                </div>
+                <mat-chip class="priority-chip" [color]="getPriorityColor(doc)">
+                  {{ getPriorityLabel(doc) }}
+                </mat-chip>
+              </div>
+
+              <div class="document-meta">
+                <span class="stagiaire-info">
+                  <mat-icon class="meta-icon">person</mat-icon>
+                  {{ doc.stagiaire.firstName }} {{ doc.stagiaire.lastName }}
+                </span>
+                <span class="date-info">
+                  <mat-icon class="meta-icon">schedule</mat-icon>
+                  Déposé {{ formatDate(doc.dateDepot) }}
+                </span>
+                <span class="size-info">
+                  <mat-icon class="meta-icon">attachment</mat-icon>
+                  {{ formatFileSize(doc.taille) }}
+                </span>
+              </div>
+            </div>
+
+            <div matListItemLine class="document-actions">
+              <button
+                mat-icon-button
+                color="primary"
+                (click)="downloadDocument(doc); $event.stopPropagation()"
+                matTooltip="Télécharger le document">
+                <mat-icon>download</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="accent"
+                (click)="selectDocument(doc); $event.stopPropagation()"
+                matTooltip="Examiner le document">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Panneau de validation du document sélectionné -->
+    <mat-card class="validation-panel-card" *ngIf="selectedDocument">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>grading</mat-icon>
+          Validation du document
+        </mat-card-title>
+        <mat-card-subtitle>{{ selectedDocument.nomFichier }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Informations du document -->
+        <div class="document-details-section">
+          <h4 class="section-title">Détails du document</h4>
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Type :</span>
+              <span class="detail-value">{{ getTypeDisplayName(selectedDocument.type) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Stagiaire :</span>
+              <span class="detail-value">{{ selectedDocument.stagiaire.firstName }} {{ selectedDocument.stagiaire.lastName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Date de dépôt :</span>
+              <span class="detail-value">{{ formatDate(selectedDocument.dateDepot) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Taille :</span>
+              <span class="detail-value">{{ formatFileSize(selectedDocument.taille) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Actions de téléchargement -->
+        <div class="download-section">
+          <h4 class="section-title">Examiner le document</h4>
+          <div class="download-actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="downloadDocument(selectedDocument)">
+              <mat-icon>download</mat-icon>
+              Télécharger le document
+            </button>
+            <button
+              mat-stroked-button
+              color="accent"
+              (click)="previewDocument(selectedDocument)">
+              <mat-icon>preview</mat-icon>
+              Aperçu (si supporté)
+            </button>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Formulaire de validation -->
+        <div class="validation-form-section">
+          <h4 class="section-title">Décision de validation</h4>
+
+          <form [formGroup]="validationForm" class="validation-form">
+            <mat-form-field appearance="outline" class="comment-field">
+              <mat-label>Commentaire (optionnel)</mat-label>
+              <textarea
+                matInput
+                formControlName="commentaire"
+                placeholder="Ajoutez vos observations ou recommandations..."
+                rows="4">
+              </textarea>
+              <mat-hint>Ce commentaire sera visible par le stagiaire</mat-hint>
+            </mat-form-field>
+
+            <div class="validation-actions">
+              <button
+                mat-raised-button
+                color="primary"
+                (click)="validateDocument('VALIDÉ')"
+                [disabled]="isValidating"
+                class="validate-btn">
+                <mat-icon>check_circle</mat-icon>
+                <span *ngIf="!isValidating">Valider le document</span>
+                <span *ngIf="isValidating">Validation en cours...</span>
+              </button>
+
+              <button
+                mat-raised-button
+                color="warn"
+                (click)="validateDocument('REFUSÉ')"
+                [disabled]="isValidating"
+                class="reject-btn">
+                <mat-icon>cancel</mat-icon>
+                <span *ngIf="!isValidating">Refuser le document</span>
+                <span *ngIf="isValidating">Traitement en cours...</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Actions de traitement en lot -->
+  <div class="batch-actions" *ngIf="!isLoading && documents.length > 1">
+    <mat-card class="batch-card">
+      <mat-card-content>
+        <div class="batch-content">
+          <div class="batch-info">
+            <mat-icon>select_all</mat-icon>
+            <span>Actions en lot sur {{ documents.length }} documents</span>
+          </div>
+          <div class="batch-buttons">
+            <button
+              mat-button
+              color="primary"
+              (click)="validateAllDocuments()"
+              matTooltip="Valider tous les documents visibles">
+              <mat-icon>done_all</mat-icon>
+              Tout valider
+            </button>
+            <button
+              mat-button
+              color="accent"
+              (click)="exportDocumentsList()"
+              matTooltip="Exporter la liste au format CSV">
+              <mat-icon>file_download</mat-icon>
+              Exporter
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>
