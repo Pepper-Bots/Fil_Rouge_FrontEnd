@@ -1,3 +1,8 @@
+body {
+  border: 10px solid red !important;
+}
+
+
 // ===============================
 // DASHBOARD STAGIAIRE - CONFORME AUX MAQUETTES NOVATECH
 // ===============================
@@ -459,9 +464,9 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 999;
-  opacity: 0;
+  opacity: 15;
   visibility: hidden;
   transition: all 0.3s ease;
 
@@ -548,6 +553,56 @@
 // RESPONSIVE
 // ===============================
 @media (max-width: 768px) {
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    width: 100vw;
+    height: 60px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 12px;
+    background: var(--sidebar-bg);
+    border-top: 1px solid var(--border-light);
+    z-index: 1001;
+
+    .sidebar-header,
+    .sidebar-bottom {
+      display: none; // Cache les parties non pertinentes en bas
+    }
+
+    .sidebar-nav {
+      flex-direction: row;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+
+      .nav-item {
+        flex-direction: column;
+        padding: 4px;
+        font-size: 0.7rem;
+
+        mat-icon {
+          font-size: 1.3rem;
+        }
+      }
+    }
+  }
+
+  // Supprimer toggle sur mobile (facultatif si tu veux qu'elle soit toujours visible)
+  .sidebar-toggle {
+    display: none;
+  }
+
+  // Le reste
+  .main-layout {
+    padding-bottom: 80px; // Pour éviter que le contenu soit caché derrière la barre du bas
+  }
+
   .main-layout {
     flex-direction: column;
     gap: 16px;
@@ -572,6 +627,7 @@
   }
 
   .side-panel {
+    background: var(--bg-secondary); // ou remplace par une couleur personnalisée comme #132f4c
     width: 100vw;
     right: -100vw;
 

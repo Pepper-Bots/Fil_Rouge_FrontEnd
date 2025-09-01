@@ -118,9 +118,9 @@ export class DashboardStagiaireService {
   private getMockProfile(): StagiaireProfile {
     return {
       id: 5,
-      firstName: 'Jérôme',
-      lastName: 'DUVAL',
-      email: 'jerome.duval@example.com',
+      firstName: 'Romain',
+      lastName: 'DUPONT',
+      email: 'romain.dupont@live.fr',
       avatar: undefined,
       parcours: 'Développeur web',
       enCoursDeValidation: true,

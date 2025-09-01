@@ -94,9 +94,18 @@
             <!-- Carte 2: Notifications -->
             <div class="dashboard-card">
               <div class="card-content">
-                <mat-icon class="card-icon" [matBadge]="nombreNotificationsNonLues"
-                          [matBadgeHidden]="nombreNotificationsNonLues === 0"
-                          matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+                <mat-icon
+                  class="card-icon"
+                  [matBadge]="nombreNotificationsNonLues"
+                  [matBadgeHidden]="nombreNotificationsNonLues === 0"
+                  matBadgeColor="warn"
+                  matBadgeSize="small"
+                  aria-hidden="false"
+                  role="img"
+                  aria-label="Nombre de notifications non lues">
+                  notifications
+                </mat-icon>
+
                 <div class="card-info">
                   <h3>Notifications</h3>
                   @if (nombreNotificationsNonLues > 0) {

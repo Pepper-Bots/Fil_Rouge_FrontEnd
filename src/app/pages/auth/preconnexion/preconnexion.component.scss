@@ -43,29 +43,41 @@
     z-index: 2;
     max-width: 1200px;
     width: 100%;
-    display: flex;
-    flex-direction: column;
     height: 100%;
+    display: flex;
+    align-items: center; // centrer verticalement
+    justify-content: flex-start; // tout à gauche
+  }
+
+  .header-box {
+    display: flex;
+    align-items: center;
+    gap: 30px; // espace entre logo et titre
+    background: rgba(255, 255, 255, 0.1); // léger fond pour lisibilité
+    backdrop-filter: blur(15px); // flou
+    border-radius: 20px;
+    padding: 20px 30px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .logo-img {
+    height: 100px;
+    width: auto;
   }
 
   .logo {
     margin-bottom: 20px;
     margin-top: 10px;
-    padding: 15px; // Padding pour créer un espace autour du logo
-    background: rgba(255, 255, 255, 0.9); // Fond blanc semi-transparent
+    padding: 25px; // Padding pour créer un espace autour du logo
+    //background: rgba(255, 255, 255, 0.9); // Fond blanc semi-transparent
     border-radius: 15px; // Coins arrondis
     display: inline-block; // S'adapte à la taille du logo
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); // Ombre pour le relief
     backdrop-filter: blur(10px); // Effet de flou
 
-    .logo-img {
-      height: 80px;
-      width: auto;
-      display: block; // Évite les espaces indésirables
-      filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
-    }
 
-    // Fallback si vous gardez du texte
+
+    // Fallback si je garde du texte
     .logo-text {
       background: linear-gradient(135deg, #FF6B35, #23CC64);
       -webkit-background-clip: text;
@@ -82,14 +94,10 @@
   .welcome-title {
     color: #23CC64;
     font-size: 2.5rem; // Réduit pour tenir sur une ligne
-    font-weight: 400;
+    font-weight: 600;
     margin: 0;
-    line-height: 1.1;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
-    white-space: nowrap; // Force sur une seule ligne
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
+    white-space: normal; // retour à la ligne si nécessaire
   }
 }
 
@@ -319,7 +327,15 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+
+  .header-box {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px 20px;
+  }
+
   .header-banner {
     height: 35vh;
     min-height: 250px;
@@ -329,7 +345,7 @@
       padding: 10px;
 
       .logo-img {
-        height: 50px;
+        height: 100px;
       }
 
       .logo-text {
@@ -338,7 +354,8 @@
     }
 
     .welcome-title {
-      font-size: 1.4rem; // Encore plus petit pour très petits écrans
+      font-size: 1.6rem; // Encore plus petit pour très petits écrans
+      margin-top: 10px;
     }
   }
 

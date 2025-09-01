@@ -1,0 +1,31 @@
+<!--&lt;!&ndash; Exemple: logo sur fond vert &ndash;&gt;-->
+<!--<div class="logo-wrap bg-green">-->
+<!--  <img src="assets/logo.svg" alt="NOVATECH ACADEMY" width="220" height="auto" />-->
+<!--</div>-->
+
+<!--&lt;!&ndash; Exemple: logo sur fond bleu &ndash;&gt;-->
+<!--<div class="logo-wrap bg-blue">-->
+<!--  <img src="assets/logo.svg" alt="NOVATECH ACADEMY" width="220" height="auto" />-->
+<!--</div>-->
+
+<!--/* fond vert */-->
+<!--.logo-wrap.bg-green {-->
+<!--&#45;&#45;logo-v: #ffffff;      /* V en blanc pour contraster */-->
+<!--&#45;&#45;logo-a: #133B61;      /* A bleu foncé */-->
+<!--&#45;&#45;logo-text: #133B61;   /* texte bleu foncé */-->
+<!--background: #17D783;-->
+<!--display:inline-block;-->
+<!--padding:8px 12px;-->
+<!--border-radius:8px;-->
+<!--}-->
+
+<!--/* fond bleu */-->
+<!--.logo-wrap.bg-blue {-->
+<!--&#45;&#45;logo-v: #17D783;      /* V vert */-->
+<!--&#45;&#45;logo-a: #ffffff;      /* A blanc */-->
+<!--&#45;&#45;logo-text: #ffffff;   /* texte blanc */-->
+<!--background: #133B61;-->
+<!--display:inline-block;-->
+<!--padding:8px 12px;-->
+<!--border-radius:8px;-->
+<!--}-->
