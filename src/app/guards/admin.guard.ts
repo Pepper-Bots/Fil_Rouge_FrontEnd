@@ -6,9 +6,17 @@ import { AuthService } from '../services/auth.service'
  * Guard qui empêche l'accès aux pages admin si l'utilisateur n'est pas un administrateur.
  * Sécurise les routes réservées aux ADMIN.
  */
-export const AdminGuard: CanActivateFn = (route, state) => {
+export const AdminGuard: CanActivateFn = (
+  route,
+  state) => {
+
   const auth = inject(AuthService);
   const router = inject(Router);
+
+  // Vérifier l'authentification
+  if (!auth.isAuthenticated()) {
+    return router.parseUrl('/connexion');
+  }
 
   // 1. Vérifier d'abord si l'utilisateur est connecté
   if (!auth.connecte || !auth.isAuthenticated()) {

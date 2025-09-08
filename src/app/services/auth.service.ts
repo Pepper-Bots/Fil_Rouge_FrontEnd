@@ -83,24 +83,13 @@ export class AuthService {
 
     try {
       const payload = jwtDecode<JwtPayload>(jwt);
-      console.log('JWT décodé:', payload); // ⚠️debug
 
       this.role = payload.role;
-      console.log('Rôle assigné:', this.role); // ⚠️
 
       localStorage.setItem('role', payload.role);
-      console.log('Rôle sauvegardé dans localStorage:', payload.role); // ⚠️
 
       this.connecte = true;
       this.premiereConnexionSubject.next(payload.premiereConnexion);
-
-      // Debug final
-      console.log('✅ État final AuthService:', {
-        connecte: this.connecte,
-        role: this.role,
-        isAdmin: this.isAdmin(),
-        isStagiaire: this.isStagiaire()
-      });
 
     } catch (e) {
       console.error('Erreur de décodage JWT', e);
@@ -133,7 +122,7 @@ export class AuthService {
   }
 
   /**
-   * Utilitaire : est-ce qu'un JWT valide est présent ?
+   * Vérification d'expiration du token
    */
   isAuthenticated(): boolean {
     const token = this.getToken();

@@ -12,7 +12,7 @@ import { connecteGuard } from './services/connecte.guard';
 import { EditDossierComponent } from './pages/edit-dossier/edit-dossier.component';
 import { DocumentValidationComponent } from './pages/document-validation/document-validation.component';
 import { DocumentUploadComponent } from './pages/document-upload/document-upload.component';
-import { AdminGuard } from './guards/adminGuard';
+import { AdminGuard } from './guards/admin.guard';
 
 // Import du nouveau layout et guard
 import { AuthenticatedLayoutComponent } from './layouts/authenticated-layout/authenticated-layout.component';
